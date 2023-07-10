@@ -1,0 +1,70 @@
+[gd_scene load_steps=3 format=3 uid="uid://sca5nhn6lprk"]
+
+[ext_resource type="Script" path="res://mqttexample.gd" id="1_6i2w6"]
+[ext_resource type="PackedScene" uid="uid://ktm7k0co2o7l" path="res://addons/mqtt/mqtt.tscn" id="2_t6rxa"]
+
+[node name="mqttexample" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_6i2w6")
+
+[node name="MQTT" parent="." instance=ExtResource("2_t6rxa")]
+
+[node name="ButtonConnect" type="Button" parent="."]
+layout_mode = 0
+offset_left = 904.0
+offset_top = 67.0
+offset_right = 1077.0
+offset_bottom = 137.0
+toggle_mode = true
+text = "Connect to broker"
+
+[node name="publish" type="Button" parent="."]
+layout_mode = 0
+offset_left = 108.0
+offset_top = 303.0
+offset_right = 281.0
+offset_bottom = 373.0
+text = "publish"
+
+[node name="brokeraddress" type="TextEdit" parent="."]
+layout_mode = 0
+offset_left = 575.0
+offset_top = 176.0
+offset_right = 883.0
+offset_bottom = 204.0
+text = "test.mosquitto.org"
+
+[node name="publishtopic" type="TextEdit" parent="."]
+layout_mode = 0
+offset_left = 292.0
+offset_top = 314.0
+offset_right = 434.0
+offset_bottom = 355.0
+text = "godot/myname"
+
+[node name="publishmessage" type="TextEdit" parent="."]
+layout_mode = 0
+offset_left = 448.0
+offset_top = 316.0
+offset_right = 590.0
+offset_bottom = 357.0
+text = "hello there"
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 0
+offset_left = 413.0
+offset_top = 180.0
+offset_right = 515.0
+offset_bottom = 206.0
+text = "MQTT broker"
+
+[connection signal="broker_connected" from="MQTT" to="." method="_on_mqtt_broker_connected"]
+[connection signal="broker_disconnected" from="MQTT" to="." method="_on_mqtt_broker_disconnected"]
+[connection signal="received_message" from="MQTT" to="." method="_on_mqtt_received_message"]
+[connection signal="toggled" from="ButtonConnect" to="." method="_on_button_connect_toggled"]
+[connection signal="pressed" from="publish" to="." method="_on_publish_pressed"]
