@@ -325,6 +325,8 @@ func subscribe(topic, qos=0):
 	msg.append(qos);
 	senddata(msg)
 
+func unsubscribe(topic, qos=0):
+	print("Not implemented")
 
 func wait_msg():
 	var n = receivedbuffer.size()
