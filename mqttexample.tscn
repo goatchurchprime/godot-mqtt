@@ -50,7 +50,7 @@ layout_mode = 0
 offset_left = 137.0
 offset_top = 82.0
 offset_right = 1017.0
-offset_bottom = 562.0
+offset_bottom = 576.0
 
 [node name="HBoxBrokerControl" type="HBoxContainer" parent="VBox"]
 layout_mode = 2
@@ -103,14 +103,16 @@ text = "Protocol: "
 
 [node name="brokerprotocol" type="OptionButton" parent="VBox/HBoxBroker"]
 layout_mode = 2
-item_count = 3
+item_count = 4
 selected = 0
-popup/item_0/text = "TCP unencrypted"
+popup/item_0/text = "tcp://"
 popup/item_0/id = 0
-popup/item_1/text = "TLS encrypted"
+popup/item_1/text = "ssl://"
 popup/item_1/id = 1
-popup/item_2/text = "Websocket unencrypted"
+popup/item_2/text = "ws://"
 popup/item_2/id = 2
+popup/item_3/text = "wss://"
+popup/item_3/id = 3
 
 [node name="HSeparator" type="HSeparator" parent="VBox"]
 custom_minimum_size = Vector2(0, 10)
@@ -168,7 +170,7 @@ text = "topic:"
 [node name="subscribetopic" type="LineEdit" parent="VBox/HBoxSubscriptions"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "godot/myname"
+text = "godot/+"
 
 [node name="subscribe" type="Button" parent="VBox/HBoxSubscriptions"]
 layout_mode = 2
@@ -243,11 +245,22 @@ layout_mode = 2
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_styles/normal = SubResource("StyleBoxFlat_njfq6")
+bbcode_enabled = true
+text = "[b]Instructions[/b]
+
+MQTT is a lightweight easy-to-use publish and subscribe (\"pubsub\") networking protocol.
+
+By default this app connects to the public server hosted at [u]https://test.mosquitto.org/[/u] , but you can connect to another broker or your own instance.
+
+[i]Commands to run on another computer terminal:[/i]
+  > mosquitto_pub -h test.mosquitto.org -t \"godot/abcd\" -m \"Bingo!\"
+  > mosquitto_sub -v -h test.mosquitto.org -t \"godot/#\""
 
 [connection signal="broker_connected" from="MQTT" to="." method="_on_mqtt_broker_connected"]
 [connection signal="broker_disconnected" from="MQTT" to="." method="_on_mqtt_broker_disconnected"]
 [connection signal="received_message" from="MQTT" to="." method="_on_mqtt_received_message"]
 [connection signal="toggled" from="VBox/HBoxBrokerControl/ButtonConnect" to="." method="_on_button_connect_toggled"]
+[connection signal="item_selected" from="VBox/HBoxBroker/brokerprotocol" to="." method="_on_brokerprotocol_item_selected"]
 [connection signal="pressed" from="VBox/HBoxSubscriptions/subscribe" to="." method="_on_subscribe_pressed"]
 [connection signal="pressed" from="VBox/HBoxSubscriptions/unsubscribe" to="." method="_on_unsubscribe_pressed"]
 [connection signal="pressed" from="VBox/HBoxPublish/publish" to="." method="_on_publish_pressed"]

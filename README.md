@@ -13,3 +13,5 @@ Clone the repo and copy the `addons/mqtt` folder into your project's `addons` fo
 
 It provides the following signals:
 
+"my_plugin" -> res://addons/mqtt
+"my_plugin" -> res://addons/my_plugin

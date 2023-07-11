@@ -22,7 +22,7 @@ buses/default_bus_layout=""
 [display]
 
 window/size/viewport_width=900
-window/size/viewport_height=500
+window/size/viewport_height=520
 
 [editor_plugins]
 

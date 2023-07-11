@@ -1,7 +1,13 @@
 extends Control
 
+var receivedmessagecount = 0
+
 func _ready():
 	connectedactionsactive(false)
+
+func _on_brokerprotocol_item_selected(index):
+	var protocol = $VBox/HBoxBroker/brokerprotocol.get_item_text(index)  # tcp, ssl, ws, wss
+	$VBox/HBoxBroker/brokerport.text = "%d" % ([ 1883, 8884, 8080, 8081 ][index])
 
 func _on_button_connect_toggled(button_pressed):
 	if button_pressed:
@@ -12,13 +18,17 @@ func _on_button_connect_toggled(button_pressed):
 			$MQTT.set_last_will($VBox/HBoxLastwill/lastwilltopic.text, 
 								$VBox/HBoxLastwill/lastwillmessage.text, 
 								$VBox/HBoxLastwill/lastwillretain.button_pressed)
+		else:
+			$MQTT.set_last_will("", "", false)
+			
 		$VBox/HBoxBrokerControl/status.text = "connecting..."
 		var brokerurl = $VBox/HBoxBroker/brokeraddress.text
-		$MQTT.connect_to_broker(brokerurl)
+		var protocol = $VBox/HBoxBroker/brokerprotocol.get_item_text($VBox/HBoxBroker/brokerprotocol.selected)
+		$MQTT.connect_to_broker("%s%s:%s" % [protocol, brokerurl, $VBox/HBoxBroker/brokerport.text])
 
 	else:
-		$MQTT.disconnect_from_server()
 		$VBox/HBoxBrokerControl/status.text = "disconnecting..."
+		$MQTT.disconnect_from_server()
 
 func brokersettingsactive(active):
 	$VBox/HBoxBroker/brokeraddress.editable = active
@@ -44,6 +54,7 @@ func _on_mqtt_broker_connected():
 	$VBox/HBoxBrokerControl/status.text = "connected."
 	brokersettingsactive(false)
 	connectedactionsactive(true)
+	receivedmessagecount = 0
 	
 func _on_mqtt_broker_disconnected():
 	$VBox/HBoxBrokerControl/status.text = "disconnected."
@@ -51,7 +62,9 @@ func _on_mqtt_broker_disconnected():
 	connectedactionsactive(false)
 
 func _on_mqtt_received_message(topic, message):
-	print("received topic %s message %s" % [topic, message])
+	if receivedmessagecount == 0:
+		$VBox/subscribedmessages.clear()
+	receivedmessagecount += 1
 	$VBox/subscribedmessages.append_text("[b]%s[/b] %s\n" % [topic, message])
 
 func _on_publish_pressed():
