@@ -6,7 +6,7 @@ func _ready():
 	connectedactionsactive(false)
 
 func _on_brokerprotocol_item_selected(index):
-	var protocol = $VBox/HBoxBroker/brokerprotocol.get_item_text(index)  # tcp, ssl, ws, wss
+	# port defaults for [tcp, ssl, ws, wss] used at https://test.mosquitto.org/
 	$VBox/HBoxBroker/brokerport.text = "%d" % ([ 1883, 8884, 8080, 8081 ][index])
 
 func _on_button_connect_toggled(button_pressed):
@@ -37,6 +37,8 @@ func brokersettingsactive(active):
 	$VBox/HBoxLastwill/lastwilltopic.editable = active
 	$VBox/HBoxLastwill/lastwillmessage.editable = active
 	$VBox/HBoxLastwill/lastwillretain.disabled = not active
+	$VBox/HBoxBrokerControl/ButtonConnect.text = "Connect to broker" if active else "Disconnect"
+	$VBox/HBoxBrokerControl/ButtonConnect.button_pressed = not active
 
 func connectedactionsactive(active):
 	$VBox/HBoxSubscriptions/subscribetopic.editable = active
@@ -60,6 +62,12 @@ func _on_mqtt_broker_disconnected():
 	$VBox/HBoxBrokerControl/status.text = "disconnected."
 	brokersettingsactive(true)
 	connectedactionsactive(false)
+
+func _on_mqtt_broker_connection_failed():
+	$VBox/HBoxBrokerControl/status.text = "failed."
+	brokersettingsactive(true)
+	connectedactionsactive(false)
+
 
 func _on_mqtt_received_message(topic, message):
 	if receivedmessagecount == 0:
@@ -96,3 +104,5 @@ func _on_unsubscribe_pressed():
 	$VBox/HBoxSubscriptions/unsubscribe.disabled = (seloptbutt.item_count == 0)
 	if seloptbutt.item_count != 0:
 		seloptbutt.select(min(sel, seloptbutt.item_count - 1))
+
+

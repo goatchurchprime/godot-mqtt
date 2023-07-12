@@ -3,10 +3,10 @@ extends Node
 # MQTT client implementation in GDScript
 # Loosely based on https://github.com/pycom/pycom-libraries/blob/master/lib/mqtt/mqtt.py
 # and initial work by Alex J Lennon <ajlennon@dynamicdevices.co.uk>
+# but then heavily rewritten to follow https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html
 
 # mosquitto_sub -h test.mosquitto.org -v -t "metest/#"
 # mosquitto_pub -h test.mosquitto.org -t "metest/retain" -m "retained message" -r
-# https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html
 
 @export var client_id = ""
 @export var verbose_level = 2  # 0 quiet, 1 connections and subscriptions, 2 all messages
@@ -40,6 +40,7 @@ const CP_CONNECT = 0x10
 const CP_PUBLISH = 0x30
 const CP_SUBSCRIBE = 0x82
 const CP_UNSUBSCRIBE = 0xa2
+const CP_PUBREC = 0x40
 const CP_SUBACK = 0x90
 const CP_UNSUBACK = 0xb0
 
@@ -58,29 +59,23 @@ var lw_retain = false
 signal received_message(topic, message)
 signal broker_connected()
 signal broker_disconnected()
+signal broker_connection_failed()
 
 var receivedbuffer : PackedByteArray = PackedByteArray()
 
 func senddata(data):
 	var E = 0
-	if socket != null:
-		E = socket.put_data(data)
-	elif sslsocket != null:
+	if sslsocket != null:
 		E = sslsocket.put_data(data)
+	elif socket != null:
+		E = socket.put_data(data)
 	elif websocket != null:
 		E = websocket.put_packet(data)
 	if E != 0:
 		print("bad senddata packet E=", E)
 	
 func receiveintobuffer():
-	if socket != null and socket.get_status() == StreamPeerTCP.STATUS_CONNECTED:
-		var n = socket.get_available_bytes()
-		if n != 0:
-			var sv = socket.get_data(n)
-			assert (sv[0] == 0)  # error code
-			receivedbuffer.append_array(sv[1])
-			
-	elif sslsocket != null:
+	if sslsocket != null:
 		if sslsocket.status == StreamPeerTLS.STATUS_CONNECTED or sslsocket.status == StreamPeerTLS.STATUS_HANDSHAKING:
 			sslsocket.poll()
 			var n = sslsocket.get_available_bytes()
@@ -88,6 +83,15 @@ func receiveintobuffer():
 				var sv = sslsocket.get_data(n)
 				assert (sv[0] == 0)  # error code
 				receivedbuffer.append_array(sv[1])
+				
+	elif socket != null and socket.get_status() == StreamPeerTCP.STATUS_CONNECTED:
+		socket.poll()
+		var n = socket.get_available_bytes()
+		if n != 0:
+			var sv = socket.get_data(n)
+			assert (sv[0] == 0)  # error code
+			receivedbuffer.append_array(sv[1])
+			
 
 	elif websocket != null:
 		websocket.poll()
@@ -102,17 +106,16 @@ func _process(delta):
 		pass
 	elif brokerconnectmode == BCM_WAITING_WEBSOCKET_CONNECTION:
 		websocket.poll()
-		print("rrww ", websocket.get_ready_state())
 		if websocket.get_ready_state() == WebSocketPeer.STATE_CLOSED:
-			print("Websocket bad!!!")
-			var code = websocket.get_close_code()
-			var reason = websocket.get_close_reason()
-			print("WebSocket closed with code: %d, reason %s. Clean: %s" % [code, reason, code != -1])
-			
+			if verbose_level:
+				print("WebSocket closed with code: %d, reason %s." % [websocket.get_close_code(), websocket.get_close_reason()])
+			emit_signal("broker_connection_failed")
 			brokerconnectmode = BCM_FAILED_CONNECTION
+			emit_signal("broker_connection_failed")
 		elif websocket.get_ready_state() == WebSocketPeer.STATE_OPEN:
 			brokerconnectmode = BCM_WAITING_CONNMESSAGE
-			print("Websocket connection now open")
+			if verbose_level:
+				print("Websocket connection now open")
 			
 	elif brokerconnectmode == BCM_WAITING_SOCKET_CONNECTION:
 		socket.poll()
@@ -125,18 +128,22 @@ func _process(delta):
 			if sslsocket == null:
 				sslsocket = StreamPeerTLS.new()
 				print("calling sslsocket.connect_to_stream()...")
-				var common_name = "jack"
+				var common_name = "mosquitto.org"
 				print("What the heck is common_name?")
 				var E3 = sslsocket.connect_to_stream(socket, common_name)
-				print("finish calling sslsocket.connect_to_stream()")
+				print("finish calling sslsocket.connect_to_stream() ", E3)
 				if E3 != 0:
 					print("bad sslsocket.connect_to_stream E=", E3)
+					emit_signal("broker_connection_failed")
 					brokerconnectmode = BCM_FAILED_CONNECTION
 					sslsocket = null
-			if sslsocket != null and sslsocket.get_status() == StreamPeerTLS.STATUS_CONNECTED:
-				print("CCSS ", sslsocket.get_status())
+			if sslsocket != null:
+				#print("CCSS ", sslsocket.get_status())
 				if sslsocket.get_status() == StreamPeerTLS.STATUS_CONNECTED:
 					brokerconnectmode = BCM_WAITING_CONNMESSAGE
+				elif sslsocket.get_status() >= StreamPeerTLS.STATUS_ERROR:
+					print("bad sslsocket.connect_to_stream")
+					emit_signal("broker_connection_failed")
 				
 	elif brokerconnectmode == BCM_WAITING_CONNMESSAGE:
 		senddata(firstmessagetoserver())
@@ -146,7 +153,7 @@ func _process(delta):
 		receiveintobuffer()
 		wait_msg()
 		if brokerconnectmode == BCM_CONNECTED and pingticksnext0 < Time.get_ticks_msec():
-			senddata(PackedByteArray([CP_PINGREQ, 0x00]))
+			pingreq()
 			pingticksnext0 = Time.get_ticks_msec() + pinginterval*1000
 
 	elif brokerconnectmode == BCM_FAILED_CONNECTION:
@@ -246,11 +253,12 @@ func connect_to_broker(brokerurl):
 	var brokerport = ((DEFAULTBROKERPORT_WSS if isssl else DEFAULTBROKERPORT_WS) if iswebsocket else (DEFAULTBROKERPORT_SSL if isssl else DEFAULTBROKERPORT_TCP))
 	if brokercomponents[3]:
 		brokerport = int(brokercomponents[3].substr(1)) 
-	var brokerpath = brokercomponents[4] if brokercomponents[4] else "/"
+	var brokerpath = brokercomponents[4] if brokercomponents[4] else ""
 	
 	var Dcount = 0
 	if iswebsocket:
 		websocket = WebSocketPeer.new()
+		websocket.supported_protocols = PackedStringArray(["mqttv3.1"])
 		var websocketurl = ("wss://" if isssl else "ws://") + brokerserver + ":" + str(brokerport) + brokerpath
 		if verbose_level:
 			print("Connecting to websocketurl: ", websocketurl)
@@ -284,15 +292,6 @@ func publish(stopic, smsg, retain=false, qos=0):
 	var msg = smsg.to_ascii_buffer() if not binarymessages else smsg
 	var topic = stopic.to_ascii_buffer()
 	
-	if socket != null:
-		if not socket.get_status() == StreamPeerTCP.STATUS_CONNECTED:
-			return
-	elif websocket != null:
-		if not websocket.is_connected_to_host():
-			return
-	else:
-		return
-
 	var pkt = PackedByteArray()
 	pkt.append(CP_PUBLISH | (2 if qos else 0) | (1 if retain else 0));
 	pkt.append(0x00);
@@ -340,6 +339,11 @@ func subscribe(stopic, qos=0):
 		print("SUBSCRIBE[%d] topic=%s" % [pid, stopic])
 	senddata(msg)
 
+func pingreq():
+	if verbose_level >= 2:
+		print("PINGREQ")
+	senddata(PackedByteArray([CP_PINGREQ, 0x00]))
+
 func unsubscribe(stopic):
 	pid += 1
 	var topic = stopic.to_ascii_buffer()
@@ -375,8 +379,9 @@ func wait_msg():
 		
 	var E = OK
 	if op == CP_PINGRESP:
-		if n >= 2:
-			E = 0 if (sz == 0) else 1
+		assert (sz == 0)
+		if verbose_level >= 2:
+			print("PINGRESP")
 			
 	elif op & 0xf0 == 0x30:
 		var topic_len = (receivedbuffer[i]<<8) + receivedbuffer[i+1]
@@ -400,37 +405,38 @@ func wait_msg():
 			assert(0)
 
 	elif op == CP_CONNACK:
-		if sz == 2:
-			var retcode = receivedbuffer[i+1]
-			if verbose_level:
-				print("CONNACK ret=%02x" % retcode)
-			if retcode == 0x00:
-				brokerconnectmode = BCM_CONNECTED
-				emit_signal("broker_connected")
-			else:
-				if verbose_level:
-					print("Bad connection retcode=", retcode) # see https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html
-				E = FAILED
+		assert (sz == 2)
+		var retcode = receivedbuffer[i+1]
+		if verbose_level:
+			print("CONNACK ret=%02x" % retcode)
+		if retcode == 0x00:
+			brokerconnectmode = BCM_CONNECTED
+			emit_signal("broker_connected")
 		else:
-			E = ERR_PARAMETER_RANGE_ERROR
+			if verbose_level:
+				print("Bad connection retcode=", retcode) # see https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html
+			emit_signal("broker_connection_failed")
+			E = FAILED
+
+	elif op == CP_PUBREC:
+		assert (sz == 2)
+		var apid = (receivedbuffer[i]<<8) + receivedbuffer[i+1]
+		if verbose_level >= 2:
+			print("PUBACK[%d]" % apid)
 
 	elif op == CP_SUBACK:
-		if sz == 3:
-			var apid = (receivedbuffer[i]<<8) + receivedbuffer[i+1]
-			if verbose_level:
-				print("SUBACK[%d] ret=%02x" % [apid, receivedbuffer[i+2]])
-			if receivedbuffer[i+2] == 0x80:
-				E = FAILED
-		else:
-			E = ERR_PARAMETER_RANGE_ERROR
+		assert (sz == 3)
+		var apid = (receivedbuffer[i]<<8) + receivedbuffer[i+1]
+		if verbose_level:
+			print("SUBACK[%d] ret=%02x" % [apid, receivedbuffer[i+2]])
+		if receivedbuffer[i+2] == 0x80:
+			E = FAILED
 
 	elif op == CP_UNSUBACK:
-		if sz == 2:
-			var apid = (receivedbuffer[i]<<8) + receivedbuffer[i+1]
-			if verbose_level:
-				print("UNSUBACK[%d]" % apid)
-		else:
-			E = ERR_PARAMETER_RANGE_ERROR
+		assert (sz == 2)
+		var apid = (receivedbuffer[i]<<8) + receivedbuffer[i+1]
+		if verbose_level:
+			print("UNSUBACK[%d]" % apid)
 
 	else:
 		if verbose_level:

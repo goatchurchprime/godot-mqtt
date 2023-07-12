@@ -63,7 +63,7 @@ text = "MQTT broker:"
 [node name="ButtonConnect" type="Button" parent="VBox/HBoxBrokerControl"]
 layout_mode = 2
 size_flags_horizontal = 6
-theme_override_colors/font_pressed_color = Color(0, 0.658824, 0, 1)
+theme_override_colors/font_pressed_color = Color(0.886275, 0.188235, 0.231373, 1)
 theme_override_styles/normal = SubResource("StyleBoxFlat_xkams")
 toggle_mode = true
 text = "Connect to broker"
@@ -257,6 +257,7 @@ By default this app connects to the public server hosted at [u]https://test.mosq
   > mosquitto_sub -v -h test.mosquitto.org -t \"godot/#\""
 
 [connection signal="broker_connected" from="MQTT" to="." method="_on_mqtt_broker_connected"]
+[connection signal="broker_connection_failed" from="MQTT" to="." method="_on_mqtt_broker_connection_failed"]
 [connection signal="broker_disconnected" from="MQTT" to="." method="_on_mqtt_broker_disconnected"]
 [connection signal="received_message" from="MQTT" to="." method="_on_mqtt_received_message"]
 [connection signal="toggled" from="VBox/HBoxBrokerControl/ButtonConnect" to="." method="_on_button_connect_toggled"]
