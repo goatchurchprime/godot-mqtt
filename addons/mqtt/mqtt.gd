@@ -62,6 +62,8 @@ signal broker_connection_failed()
 
 var receivedbuffer : PackedByteArray = PackedByteArray()
 
+var common_name = null
+
 func senddata(data):
 	var E = 0
 	if sslsocket != null:
@@ -101,6 +103,7 @@ func receiveintobuffer():
 	
 	
 var pingticksnext0 = 0
+
 func _process(delta):
 	if brokerconnectmode == BCM_NOCONNECTION:
 		pass
@@ -139,13 +142,9 @@ func _process(delta):
 		if socketstatus == StreamPeerTCP.STATUS_CONNECTED:
 			if sslsocket == null:
 				sslsocket = StreamPeerTLS.new()
-				print("calling sslsocket.connect_to_stream()...")
-				var common_name = "test.mosquitto.org"
-				#common_name = "doesliverpool.xyz"
-				print("ssl status before connect ", sslsocket.get_status())
+				if verbose_level:
+					print("Connecting socket to SSL with common_name=", common_name)
 				var E3 = sslsocket.connect_to_stream(socket, common_name)
-				print("finish calling sslsocket.connect_to_stream() ", E3)
-				print("ssl status after connect ", sslsocket.get_status())
 				if E3 != 0:
 					print("bad sslsocket.connect_to_stream E=", E3)
 					brokerconnectmode = BCM_FAILED_CONNECTION
@@ -270,7 +269,7 @@ func connect_to_broker(brokerurl):
 		brokerport = int(brokercomponents[3].substr(1)) 
 	var brokerpath = brokercomponents[4] if brokercomponents[4] else ""
 	
-	var Dcount = 0
+	common_name = null	
 	if iswebsocket:
 		websocket = WebSocketPeer.new()
 		websocket.supported_protocols = PackedStringArray(["mqttv3.1"])
@@ -292,7 +291,11 @@ func connect_to_broker(brokerurl):
 		if E != 0:
 			print("ERROR: socketclient.connect_to_url Err: ", E)
 			return cleanupsockets(false)
-		brokerconnectmode = BCM_WAITING_SSL_SOCKET_CONNECTION if isssl else BCM_WAITING_SOCKET_CONNECTION
+		if isssl:
+			brokerconnectmode = BCM_WAITING_SSL_SOCKET_CONNECTION
+			common_name = brokerserver
+		else:
+			brokerconnectmode = BCM_WAITING_SOCKET_CONNECTION
 		
 	return true
 
