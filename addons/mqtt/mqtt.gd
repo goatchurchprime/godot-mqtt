@@ -10,6 +10,8 @@ extends Node
 
 @export var client_id = ""
 @export var verbose_level = 2  # 0 quiet, 1 connections and subscriptions, 2 all messages
+@export var binarymessages = false
+@export var pinginterval = 30
 
 var socket = null
 var sslsocket = null
@@ -29,7 +31,7 @@ var brokerconnectmode = BCM_NOCONNECTION
 var regexbrokerurl = RegEx.new()
 
 const DEFAULTBROKERPORT_TCP = 1883
-const DEFAULTBROKERPORT_SSL = 8884
+const DEFAULTBROKERPORT_SSL = 8886
 const DEFAULTBROKERPORT_WS = 8080
 const DEFAULTBROKERPORT_WSS = 8081
 
@@ -44,13 +46,10 @@ const CP_PUBREC = 0x40
 const CP_SUBACK = 0x90
 const CP_UNSUBACK = 0xb0
 
-var binarymessages = false
-
 var pid = 0
 var user = null
 var pswd = null
 var keepalive = 120
-var pinginterval = 30
 var lw_topic = null
 var lw_msg = null
 var lw_qos = 0
@@ -76,7 +75,8 @@ func senddata(data):
 	
 func receiveintobuffer():
 	if sslsocket != null:
-		if sslsocket.status == StreamPeerTLS.STATUS_CONNECTED or sslsocket.status == StreamPeerTLS.STATUS_HANDSHAKING:
+		var sslsocketstatus = sslsocket.get_status()
+		if sslsocketstatus == StreamPeerTLS.STATUS_CONNECTED or sslsocketstatus == StreamPeerTLS.STATUS_HANDSHAKING:
 			sslsocket.poll()
 			var n = sslsocket.get_available_bytes()
 			if n != 0:
@@ -106,42 +106,57 @@ func _process(delta):
 		pass
 	elif brokerconnectmode == BCM_WAITING_WEBSOCKET_CONNECTION:
 		websocket.poll()
-		if websocket.get_ready_state() == WebSocketPeer.STATE_CLOSED:
+		var websocketstate = websocket.get_ready_state()
+		if websocketstate == WebSocketPeer.STATE_CLOSED:
 			if verbose_level:
 				print("WebSocket closed with code: %d, reason %s." % [websocket.get_close_code(), websocket.get_close_reason()])
-			emit_signal("broker_connection_failed")
 			brokerconnectmode = BCM_FAILED_CONNECTION
 			emit_signal("broker_connection_failed")
-		elif websocket.get_ready_state() == WebSocketPeer.STATE_OPEN:
+		elif websocketstate == WebSocketPeer.STATE_OPEN:
 			brokerconnectmode = BCM_WAITING_CONNMESSAGE
 			if verbose_level:
 				print("Websocket connection now open")
 			
 	elif brokerconnectmode == BCM_WAITING_SOCKET_CONNECTION:
 		socket.poll()
-		if socket.get_status() == StreamPeerTCP.STATUS_CONNECTED:
+		var socketstatus = socket.get_status()
+		if socketstatus == StreamPeerTCP.STATUS_ERROR:
+			if verbose_level:
+				print("TCP socket error")
+			brokerconnectmode = BCM_FAILED_CONNECTION
+			emit_signal("broker_connection_failed")
+		if socketstatus == StreamPeerTCP.STATUS_CONNECTED:
 			brokerconnectmode = BCM_WAITING_CONNMESSAGE
 
 	elif brokerconnectmode == BCM_WAITING_SSL_SOCKET_CONNECTION:
 		socket.poll()
-		if socket.get_status() == StreamPeerTCP.STATUS_CONNECTED:
+		var socketstatus = socket.get_status()
+		if socketstatus == StreamPeerTCP.STATUS_ERROR:
+			if verbose_level:
+				print("TCP socket error before SSL")
+			brokerconnectmode = BCM_FAILED_CONNECTION
+			emit_signal("broker_connection_failed")
+		if socketstatus == StreamPeerTCP.STATUS_CONNECTED:
 			if sslsocket == null:
 				sslsocket = StreamPeerTLS.new()
 				print("calling sslsocket.connect_to_stream()...")
-				var common_name = "mosquitto.org"
-				print("What the heck is common_name?")
+				var common_name = "test.mosquitto.org"
+				#common_name = "doesliverpool.xyz"
+				print("ssl status before connect ", sslsocket.get_status())
 				var E3 = sslsocket.connect_to_stream(socket, common_name)
 				print("finish calling sslsocket.connect_to_stream() ", E3)
+				print("ssl status after connect ", sslsocket.get_status())
 				if E3 != 0:
 					print("bad sslsocket.connect_to_stream E=", E3)
-					emit_signal("broker_connection_failed")
 					brokerconnectmode = BCM_FAILED_CONNECTION
+					emit_signal("broker_connection_failed")
 					sslsocket = null
 			if sslsocket != null:
-				#print("CCSS ", sslsocket.get_status())
-				if sslsocket.get_status() == StreamPeerTLS.STATUS_CONNECTED:
+				sslsocket.poll()
+				var sslsocketstatus = sslsocket.get_status()
+				if sslsocketstatus == StreamPeerTLS.STATUS_CONNECTED:
 					brokerconnectmode = BCM_WAITING_CONNMESSAGE
-				elif sslsocket.get_status() >= StreamPeerTLS.STATUS_ERROR:
+				elif sslsocketstatus >= StreamPeerTLS.STATUS_ERROR:
 					print("bad sslsocket.connect_to_stream")
 					emit_signal("broker_connection_failed")
 				

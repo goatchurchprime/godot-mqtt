@@ -7,7 +7,7 @@ func _ready():
 
 func _on_brokerprotocol_item_selected(index):
 	# port defaults for [tcp, ssl, ws, wss] used at https://test.mosquitto.org/
-	$VBox/HBoxBroker/brokerport.text = "%d" % ([ 1883, 8884, 8080, 8081 ][index])
+	$VBox/HBoxBroker/brokerport.text = "%d" % ([ 1883, 8886, 8080, 8081 ][index])
 
 func _on_button_connect_toggled(button_pressed):
 	if button_pressed:
