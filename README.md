@@ -24,111 +24,123 @@ GodotCon 2021 for a demo of controlling a wheeled robot from
 the Dodge the Creeps game.  You can also use it to listen to 
 realtime sensor data and build up a virtual dashboard.
 
-Other uses are for public room chats, running a simple implementation of 
-a daily high score, providing runtime remote monitoring of your game when 
-it is alpha release, and acting as a 
+Other uses for MQTT are chat rooms, lightweight implementation of 
+high score tables, and providing runtime remote monitoring of your game 
+metrics (eg framerate) when it is in alpha release on other people's hardware.
+It can also be used as a 
 [signalling server](https://docs.godotengine.org/en/stable/tutorials/networking/webrtc.html#id1)
 for the powerful WebRTC peer-to-peer networking protocol that is 
 built into Godot.  
 
-Try the *mqttexample* project that comes in this repo is a good place 
-to experiment and explore the features, as well as testing out if the connections
-are working. 
+The **mqttexample** project in this repo is good for 
+experimenting and exploring the features. 
+
+![image](https://github.com/goatchurchprime/godot-mqtt/assets/677254/264473c6-6ad1-4a87-8bb5-49fd28789bed)
 
 ## The protocol
 
-The easiest way to understand this protocol is [install mosquitto](https://mosquitto.org/download/), 
-open two console on your machine, and run the following command in the first console:
+The easiest way to understand this protocol (without using Godot and this plugin) is to [install mosquitto](https://mosquitto.org/download/), 
+and open two consoles on your machine.
 
-> mosquitto_sub -v -h test.mosquitto.org -t "godot/#"
+Run the following command in the first console:
 
-and then type this command in the second console:
+* `mosquitto_sub -v -h test.mosquitto.org -t "godot/#"`
 
-> mosquitto_pub -h test.mosquitto.org -t "godot/abcd" -m "Bingo!"
+and then run this other command in the second console:
 
-The first console should now print:
+* `mosquitto_pub -h test.mosquitto.org -t "godot/abcd" -m "Bingo!"`
+
+The first console should have now printed:
    
-> godot/abcd Bingo!
+* `godot/abcd Bingo!`
 
-What's happening?  The first command has connected to the broker "test.mosquitto.org" 
-and subscribed to the topic "godot/#".  The '#' is a wild-card that means any topic that 
-starts with "godot/' will be received.
+*What's going on here?*  
 
-The second command publishes the message "Bingo!" to the topic "godot/abcd" 
-on the broker at the address "test.mosquitto.org", which is picked up by the first 
-command as it matches the pattern.  Since the broker is out on the internet you could run 
-these commands on different machines.  
+The first command connected to the broker `test.mosquitto.org` 
+and subscribed to the topic `"godot/#"` where the `'#'` is a wild-card 
+that matches the remained of the topic string.
 
-Now that you understand the basics, you can do the same thing through an online 
-version of mosquitto at [https://www.hivemq.com/demos/websocket-client/](https://www.hivemq.com/demos/websocket-client/). 
-by filling in the boxes.
+The second command publishes the message `"Bingo!"` to the topic `"godot/abcd"` 
+on the broker at the address `test.mosquitto.org`, which is picked up by the first 
+command since it matches the pattern.  
+
+Now you understand the basics, you can do the same thing on a webpage 
+version of the mqtt client at [hivemq.com](https://www.hivemq.com/demos/websocket-client/).
+(The ClientID is a unique identifier for the client, often randomly generated.)
+
+### Advanced features
 
 To make this protocol insanely useful, there are two further features:
 
-When the **retain** flag is set to true on any message, the broker doesn't only send the message to 
-all the subscribers, it also keeps a copy which will be sent to any new subscriber which matches the topic
-message.  This allows for persistent data (eg high scores) to be recorded and updated on the 
+When the **`retain`** flag is set to true, the broker not only sends the message to 
+all the subscribers, it also keeps a copy and sends it to any new subscriber that matches the topic.
+This allows for persistent data (eg high scores) to be recorded and updated on the 
 broker.  To delete a retained message, publish an empty message to its topic.  
 
-When a new connection is made to the broker, a **lastwill** topic and message can optionally be included.
-This message will be published automatically when the connection is broken.  The lastwill message 
-can also have 
+When a new connection is made to the broker, a **`lastwill`** topic and message can optionally be included.
+This message will be published automatically on disconnected.  The lastwill message 
+can also have its `retain` flag set.
 
 These two features can be combined to provide a connection status feature for a player instance 
 by first executing: 
-* set_last_will( topic="playerstates/myplayerid", msg="disconnected", retain=true )
+* `set_last_will( topic="playerstates/myplayerid", msg="disconnected", retain=true )`
+
 before connecting to the broker.  
 
-Then the first message you send after connection is:
-* publish( topic="playerstates/myplayerid", msg="readytoplay", retain=true )
-This message is automatically over-written on disconnect.
+Then the first message you send after successfully connecting to the broker is:
+* `publish( topic="playerstates/myplayerid", msg="readytoplay", retain=true )`
+
+This persistent message will be automatically over-written at disconnect.
 
 At any time when a player elsewhere connects to this broker and subscribes 
-to the topic "playerstates/+" the the messages returned for their ids will 
+to the topic `"playerstates/+"` the the messages returned will 
 correctly give their online statuses.
 
-A final setting with any message is **qos** for "Quality of Service".  
+There is final setting in the publish fuction, **`qos`** for "Quality of Service".  
 This tells the broker whether you want an acknowledgement that the message 
-has gotten through to it (qos=1) as well as build in confirmation 
-and de-dplication features (qos=2).  It's not been fully implemented in this 
+has gotten through to it (qos=1) as well as enforce confirmation 
+and de-duplication feature (qos=2).  This has not been fully implemented in this 
 library.  
   
 
 ## Usage
 
-* $MQTT.set_last_will(topic, msg, retain=false, qos=0)
-(Must be set before connection is made.)
+* `$MQTT.set_last_will(topic, msg, retain=false, qos=0)`
 
-* $MQTT.connect_to_broker(brokerurl)
+Must be set before connection is made.
+
+* `$MQTT.connect_to_broker(brokerurl)`   
+
 This URL should contain protocol and port, eg 
-"tcp://test.mosquitto.org:1883/" for the basic default setting
-or for secure websocket "wss://test.mosquitto.org:8081/".
+`"tcp://test.mosquitto.org:1883/"` for the basic default setting
+or for secure websocket `"wss://test.mosquitto.org:8081/"`.
 
-Note that MQTT brokers don't always have the websocket interface enabled
-since the primary interface was tcp sockets.  Websockets needed to be 
-added later due to the restrictions in HTML5 not having direct access 
-to tcp sockets.
+Some MQTT brokers do not have the WebSocket interface enabled
+since the primary interface is TCP.  WebSockets are, however,  
+necessary to get round restrictions in HTML5 not having direct access 
+to TCP sockets.
 
-* $MQTT.subscribe(topic, qos=0)
+* `$MQTT.subscribe(topic, qos=0)`
+
 This subscribes to a topic.  All subscribed messages go to the 
 same `received_message`.  
 
-* $MQTT.unsubscribe(topic)
+* `$MQTT.unsubscribe(topic)`
+ 
 Little used since all topics are unsubscribed on disconnect.
 The topic has to match exactly to one that was subscribed.  
-(You can't use this for include/exclude rules.)
+(You cannot use this for include/exclude rules.)
 
-* $MQTT.publish(topic, msg, retain=false, qos=0)
+* `$MQTT.publish(topic, msg, retain=false, qos=0)`
+
 Publish a message to the broker.
-
 
 ### @export parameters
 
-@export var client_id = ""
-@export var verbose_level = 2  # 0 quiet, 1 connections and subscriptions, 2 all messages
-@export var binarymessages = false
-@export var pinginterval = 30
-
+* @export var client_id = ""
+* @export var verbose_level = 2  # 0 quiet, 1 connections and subscriptions, 2 all messages
+* @export var binarymessages = false
+* @export var pinginterval = 30
                                 
 ### Signals
 
