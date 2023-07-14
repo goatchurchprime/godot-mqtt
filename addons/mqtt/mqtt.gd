@@ -59,6 +59,7 @@ signal received_message(topic, message)
 signal broker_connected()
 signal broker_disconnected()
 signal broker_connection_failed()
+signal publish_acknowledge(pid)
 
 var receivedbuffer : PackedByteArray = PackedByteArray()
 
@@ -98,9 +99,7 @@ func receiveintobuffer():
 	elif websocket != null:
 		websocket.poll()
 		while websocket.get_available_packet_count() != 0:
-			print("Packets ", websocket.get_available_packet_count())
 			receivedbuffer.append_array(websocket.get_packet())
-	
 	
 var pingticksnext0 = 0
 
@@ -172,7 +171,6 @@ func _process(delta):
 
 	elif brokerconnectmode == BCM_FAILED_CONNECTION:
 		cleanupsockets()
-
 
 func _ready():
 	regexbrokerurl.compile('^(tcp://|wss://|ws://|ssl://)?([^:\\s]+)(:\\d+)?(/\\S*)?$')
@@ -339,6 +337,7 @@ func publish(stopic, smsg, retain=false, qos=0):
 	senddata(pkt)
 	if verbose_level >= 2:
 		print("CP_PUBLISH%s%s topic=%s msg=%s" % [ "[%d]"%pid if qos else "", " <retain>" if retain else "", stopic, smsg])
+	return pid
 
 func subscribe(stopic, qos=0):
 	pid += 1
@@ -441,6 +440,7 @@ func wait_msg():
 		var apid = (receivedbuffer[i]<<8) + receivedbuffer[i+1]
 		if verbose_level >= 2:
 			print("PUBACK[%d]" % apid)
+		emit_signal("publish_acknowledge", apid)
 
 	elif op == CP_SUBACK:
 		assert (sz == 3)

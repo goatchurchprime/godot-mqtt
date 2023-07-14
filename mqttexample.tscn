@@ -1,12 +1,7 @@
-[gd_scene load_steps=9 format=3 uid="uid://sca5nhn6lprk"]
+[gd_scene load_steps=8 format=3 uid="uid://sca5nhn6lprk"]
 
 [ext_resource type="Script" path="res://mqttexample.gd" id="1_6i2w6"]
 [ext_resource type="PackedScene" uid="uid://ktm7k0co2o7l" path="res://addons/mqtt/mqtt.tscn" id="2_t6rxa"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xkams"]
-content_margin_left = 5.0
-content_margin_right = 5.0
-bg_color = Color(0.341176, 0.101961, 0.0392157, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_iasn2"]
 content_margin_left = 5.0
@@ -36,8 +31,10 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_right = -1152.0
-offset_bottom = -648.0
+offset_left = -123.0
+offset_top = -64.0
+offset_right = -1023.0
+offset_bottom = -584.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_6i2w6")
@@ -60,12 +57,9 @@ layout_mode = 2
 theme_type_variation = &"HeaderLarge"
 text = "MQTT broker:"
 
-[node name="ButtonConnect" type="Button" parent="VBox/HBoxBrokerControl"]
+[node name="ButtonConnect" type="CheckButton" parent="VBox/HBoxBrokerControl"]
 layout_mode = 2
 size_flags_horizontal = 6
-theme_override_colors/font_pressed_color = Color(0.886275, 0.188235, 0.231373, 1)
-theme_override_styles/normal = SubResource("StyleBoxFlat_xkams")
-toggle_mode = true
 text = "Connect to broker"
 
 [node name="status" type="Label" parent="VBox/HBoxBrokerControl"]

@@ -37,7 +37,6 @@ func brokersettingsactive(active):
 	$VBox/HBoxLastwill/lastwilltopic.editable = active
 	$VBox/HBoxLastwill/lastwillmessage.editable = active
 	$VBox/HBoxLastwill/lastwillretain.disabled = not active
-	$VBox/HBoxBrokerControl/ButtonConnect.text = "Connect to broker" if active else "Disconnect"
 	$VBox/HBoxBrokerControl/ButtonConnect.button_pressed = not active
 
 func connectedactionsactive(active):

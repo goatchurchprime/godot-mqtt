@@ -1,0 +1,96 @@
+[gd_scene load_steps=3 format=3 uid="uid://8726w0yv488e"]
+
+[ext_resource type="Script" path="res://HighScoreExample.gd" id="1_a1y26"]
+[ext_resource type="PackedScene" uid="uid://ktm7k0co2o7l" path="res://addons/mqtt/mqtt.tscn" id="2_8e2pi"]
+
+[node name="HighScoreExample" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_a1y26")
+
+[node name="MQTT" parent="." instance=ExtResource("2_8e2pi")]
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Label" type="Label" parent="VBox"]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+text = "MQTT Based High Score System"
+horizontal_alignment = 1
+
+[node name="HBoxGamename" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBox/HBoxGamename"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+text = "Game name"
+
+[node name="LineEdit" type="LineEdit" parent="VBox/HBoxGamename"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+text = "A_Great_Godot_Game"
+
+[node name="HBoxPlayername" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBox/HBoxPlayername"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+text = "Player name"
+
+[node name="LineEdit" type="LineEdit" parent="VBox/HBoxPlayername"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+text = "Jonathan"
+
+[node name="HBoxHighScore" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBox/HBoxHighScore"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+text = "High score"
+
+[node name="LineEdit" type="LineEdit" parent="VBox/HBoxHighScore"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+text = "1000"
+
+[node name="HBoxButtons" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="SendScore" type="Button" parent="VBox/HBoxButtons"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+text = "Send score"
+
+[node name="FetchScores" type="Button" parent="VBox/HBoxButtons"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+text = "Fetch Scores"
+
+[node name="HBoxTopscores" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="RichTextLabel" type="RichTextLabel" parent="VBox/HBoxTopscores"]
+custom_minimum_size = Vector2(400, 300)
+layout_mode = 2
+bbcode_enabled = true
+text = "[u]Top ten[/u]
+"
+
+[connection signal="broker_connected" from="MQTT" to="." method="_on_mqtt_broker_connected"]
+[connection signal="broker_connection_failed" from="MQTT" to="." method="_on_mqtt_broker_connection_failed"]
+[connection signal="broker_disconnected" from="MQTT" to="." method="_on_mqtt_broker_disconnected"]
+[connection signal="publish_acknowledge" from="MQTT" to="." method="_on_mqtt_publish_acknowledge"]
+[connection signal="received_message" from="MQTT" to="." method="_on_mqtt_received_message"]
+[connection signal="pressed" from="VBox/HBoxButtons/SendScore" to="." method="_on_send_score_pressed"]
+[connection signal="pressed" from="VBox/HBoxButtons/FetchScores" to="." method="_on_fetch_scores_pressed"]
