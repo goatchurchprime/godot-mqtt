@@ -9,42 +9,38 @@ Clone the repo and copy the `addons/mqtt` folder into your project's `addons` fo
 
 ## Applications
 
-**MQTT** is probably the simplest networking protocol you can use 
+**MQTT** is probably the simplest known networking protocol you can use 
 to communicate between systems, which is why it is often used by 
-IoT devices.
+low power IoT (Internet of Things) devices.
 
-In spite of its simplicity, it is extremely flexible and has the 
+In spite of its simplicity, MQTT is extremely flexible and has the 
 advantage of being standardized enough that you don't need to write 
-any server-side software.  For quick experimental applications you 
-can "borrow" the use of a server that is already on the public internet, 
-such as [test.mosquitto.org](https://test.mosquitto.org/).
+your own server-side software.  You can often get by with "borrowing " the use of a public server on the internet (see [test.mosquitto.org](https://test.mosquitto.org/)).
 
-See [this talk](https://www.youtube.com/watch?v=en9fMP4g9y8) from 
-GodotCon 2021 for a demo of controlling a wheeled robot from 
-the Dodge the Creeps game.  You can also use it to listen to 
-realtime sensor data and build up a virtual dashboard.
-
-Other uses for MQTT are chat rooms, lightweight implementation of 
-high score tables, and providing runtime remote monitoring of your game 
-metrics (eg framerate) when it is in alpha release on other people's hardware.
-It can also be used as a 
+Uses for MQTT in Godot are chat rooms, receiving and sending messages to physical devices, high score tables, remote monitoring of runtime metrics (eg framerate) of an alpha release for quality control, and as a 
 [signalling server](https://docs.godotengine.org/en/stable/tutorials/networking/webrtc.html#id1)
-for the powerful WebRTC peer-to-peer networking protocol that is 
-built into Godot.  
+for the powerful WebRTC peer-to-peer networking protocol.  
+
+Here is a [talk](https://www.youtube.com/watch?v=en9fMP4g9y8) from 
+GodotCon 2021 that included demo of controlling a wheeled robot from 
+the Dodge the Creeps game.
+
+[![image](https://github.com/goatchurchprime/godot-mqtt/assets/677254/593b8a53-801e-480f-9812-cfc4e9ae360b)](https://www.youtube.com/watch?v=en9fMP4g9y8)
+
+
 
 The **mqttexample** project in this repo is good for 
 experimenting and exploring the features. 
 
 ![image](https://github.com/goatchurchprime/godot-mqtt/assets/677254/264473c6-6ad1-4a87-8bb5-49fd28789bed)
 
-There's also an even easier **HighScoreExample** scene which shows how to implement a list of 
-global high scores in a game
-![image](https://github.com/goatchurchprime/godot-mqtt/assets/677254/f892f250-9b15-4f1c-b380-3d026151108c)
+There's also an even simpler **HighScoreExample** scene that demonstrates how to implement a list of 
+global high scores in a game.
 
 ## The protocol
 
-The easiest way to understand this protocol (without using Godot and this plugin) is to [install mosquitto](https://mosquitto.org/download/), 
-and open two consoles on your machine.
+The easiest way to understand this protocol (without using Godot or this plugin) is to [install mosquitto](https://mosquitto.org/download/), 
+and open two command line consoles on your computer.
 
 Run the following command in the first console:
 
@@ -82,7 +78,7 @@ This allows for persistent data (eg high scores) to be recorded and updated on t
 broker.  To delete a retained message, publish an empty message to its topic.  
 
 When a new connection is made to the broker, a **`lastwill`** topic and message can optionally be included.
-This message will be published automatically on disconnected.  The lastwill message 
+This message will be published automatically on disconnect.  The lastwill message 
 can also have its `retain` flag set.
 
 These two features can be combined to provide a connection status feature for a player instance 
@@ -152,6 +148,7 @@ Publish a message to the broker.
 * signal broker_connected()
 * signal broker_disconnected()
 * signal broker_connection_failed()
-
+* signal broker_connection_failed()
+* signal publish_acknowledge(id)
 
 
