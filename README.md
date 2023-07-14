@@ -37,6 +37,10 @@ experimenting and exploring the features.
 
 ![image](https://github.com/goatchurchprime/godot-mqtt/assets/677254/264473c6-6ad1-4a87-8bb5-49fd28789bed)
 
+There's also an even easier **HighScoreExample** scene which shows how to implement a list of 
+global high scores in a game
+![image](https://github.com/goatchurchprime/godot-mqtt/assets/677254/f892f250-9b15-4f1c-b380-3d026151108c)
+
 ## The protocol
 
 The easiest way to understand this protocol (without using Godot and this plugin) is to [install mosquitto](https://mosquitto.org/download/), 
