@@ -79,7 +79,7 @@ text = "URL: "
 [node name="brokeraddress" type="LineEdit" parent="VBox/HBoxBroker"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "test.mosquitto.org"
+text = "broker.hivemq.com"
 
 [node name="Label2" type="Label" parent="VBox/HBoxBroker"]
 layout_mode = 2
