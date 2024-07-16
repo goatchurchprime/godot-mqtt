@@ -20,15 +20,22 @@ func _on_button_connect_toggled(button_pressed):
 								$VBox/HBoxLastwill/lastwillretain.button_pressed)
 		else:
 			$MQTT.set_last_will("", "", false)
-			
+		
+		if $VBox/HBoxBroker/brokeruser.text:
+			$MQTT.set_user_pass($VBox/HBoxBroker/brokeruser.text,
+								$VBox/HBoxBroker/brokerpswd.text)
+		else:
+			$MQTT.set_user_pass(null, null)
+		
 		$VBox/HBoxBrokerControl/status.text = "connecting..."
 		var brokerurl = $VBox/HBoxBroker/brokeraddress.text
 		var protocol = $VBox/HBoxBroker/brokerprotocol.get_item_text($VBox/HBoxBroker/brokerprotocol.selected)
 		$MQTT.connect_to_broker("%s%s:%s" % [protocol, brokerurl, $VBox/HBoxBroker/brokerport.text])
 
 	else:
-		$VBox/HBoxBrokerControl/status.text = "disconnecting..."
+		#$VBox/HBoxBrokerControl/status.text = "disconnecting..."
 		$MQTT.disconnect_from_server()
+		
 
 func brokersettingsactive(active):
 	$VBox/HBoxBroker/brokeraddress.editable = active

@@ -81,6 +81,20 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "broker.hivemq.com"
 
+[node name="Label4" type="Label" parent="VBox/HBoxBroker"]
+layout_mode = 2
+text = "User:"
+
+[node name="brokeruser" type="LineEdit" parent="VBox/HBoxBroker"]
+layout_mode = 2
+
+[node name="Label5" type="Label" parent="VBox/HBoxBroker"]
+layout_mode = 2
+text = "Pswd:"
+
+[node name="brokerpswd" type="LineEdit" parent="VBox/HBoxBroker"]
+layout_mode = 2
+
 [node name="Label2" type="Label" parent="VBox/HBoxBroker"]
 layout_mode = 2
 text = "Port: "
