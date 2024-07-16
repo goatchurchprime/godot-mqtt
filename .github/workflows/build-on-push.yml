@@ -1,4 +1,5 @@
 # Workflow to automatically create deliverables
+# copied from https://github.com/Malcolmnixon/GodotXRHandPoseDetector/blob/main/.github/workflows/build-on-push.yml
 name: Build on push
 
 on:
@@ -26,7 +27,7 @@ jobs:
         mkdir plugin/godot-mqtt
         mkdir plugin/godot-mqtt/addons
         cp -r demo/godot-mqtt/addons/mqtt plugin/godot-mqtt/addons
-        cp demo/godot-mqtt/LICENSE plugin/godot-mqtt/addons/mqtt
+        cp demo/godot-mqtt/LICENSE.md plugin/godot-mqtt/addons/mqtt
         rm -rf demo/godot-mqtt/.git
         rm -rf demo/godot-mqtt/.github
 
