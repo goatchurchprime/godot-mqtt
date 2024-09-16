@@ -264,7 +264,7 @@ func connect_to_broker(brokerurl):
 	assert (brokerconnectmode == BCM_NOCONNECTION)
 	var brokermatch = regexbrokerurl.search(brokerurl)
 	if brokermatch == null:
-		print("ERROR: unrecognized brokerurl pattern:", brokerurl)
+		print("ERROR: unrecognized brokerurl pattern: ", brokerurl, " must be tcp,ssh,ws, or wss://")
 		return cleanupsockets(false)
 	var brokercomponents = brokermatch.strings
 	var brokerprotocol = brokercomponents[1]
