@@ -250,6 +250,7 @@ layout_mode = 2
 [node name="subscribedmessages" type="RichTextLabel" parent="VBox"]
 layout_mode = 2
 size_flags_vertical = 3
+focus_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_njfq6")
 bbcode_enabled = true
 text = "[b]Instructions[/b]
@@ -261,6 +262,7 @@ By default this app connects to the public server hosted at [u]https://test.mosq
 [i]Commands to run on another computer terminal:[/i]
   > mosquitto_pub -h test.mosquitto.org -t \"godot/abcd\" -m \"Bingo!\"
   > mosquitto_sub -v -h test.mosquitto.org -t \"godot/#\""
+selection_enabled = true
 
 [connection signal="broker_connected" from="MQTT" to="." method="_on_mqtt_broker_connected"]
 [connection signal="broker_connection_failed" from="MQTT" to="." method="_on_mqtt_broker_connection_failed"]
