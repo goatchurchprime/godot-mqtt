@@ -30,7 +30,9 @@ func _on_button_connect_toggled(button_pressed):
 		$VBox/HBoxBrokerControl/status.text = "connecting..."
 		var brokerurl = $VBox/HBoxBroker/brokeraddress.text
 		var protocol = $VBox/HBoxBroker/brokerprotocol.get_item_text($VBox/HBoxBroker/brokerprotocol.selected)
-		$MQTT.connect_to_broker("%s%s:%s" % [protocol, brokerurl, $VBox/HBoxBroker/brokerport.text])
+		var retval = $MQTT.connect_to_broker("%s%s:%s" % [protocol, brokerurl, $VBox/HBoxBroker/brokerport.text])
+		if not retval:
+			$VBox/HBoxBrokerControl/status.text = "error."
 
 	else:
 		#$VBox/HBoxBrokerControl/status.text = "disconnecting..."
@@ -110,5 +112,3 @@ func _on_unsubscribe_pressed():
 	$VBox/HBoxSubscriptions/unsubscribe.disabled = (seloptbutt.item_count == 0)
 	if seloptbutt.item_count != 0:
 		seloptbutt.select(min(sel, seloptbutt.item_count - 1))
-
-

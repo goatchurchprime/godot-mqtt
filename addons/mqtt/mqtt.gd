@@ -264,7 +264,7 @@ func connect_to_broker(brokerurl):
 	assert (brokerconnectmode == BCM_NOCONNECTION)
 	var brokermatch = regexbrokerurl.search(brokerurl)
 	if brokermatch == null:
-		print("ERROR: unrecognized brokerurl pattern: ", brokerurl, " must be tcp,ssh,ws, or wss://")
+		printerr("ERROR: unrecognized brokerurl pattern: ", brokerurl, " must be tcp,ssh,ws, or wss://")
 		return cleanupsockets(false)
 	var brokercomponents = brokermatch.strings
 	var brokerprotocol = brokercomponents[1]
@@ -285,7 +285,7 @@ func connect_to_broker(brokerurl):
 			print("Connecting to websocketurl: ", websocketurl)
 		var E = websocket.connect_to_url(websocketurl)
 		if E != 0:
-			print("ERROR: websocketclient.connect_to_url Err: ", E)
+			printerr("ERROR: websocketclient.connect_to_url Err: ", E)
 			return cleanupsockets(false)
 		print("Websocket get_requested_url ", websocket.get_requested_url())
 		brokerconnectmode = BCM_WAITING_WEBSOCKET_CONNECTION
@@ -296,7 +296,7 @@ func connect_to_broker(brokerurl):
 			print("Connecting to %s:%s" % [brokerserver, brokerport])
 		var E = socket.connect_to_host(brokerserver, brokerport)
 		if E != 0:
-			print("ERROR: socketclient.connect_to_url Err: ", E)
+			printerr("ERROR: socketclient.connect_to_url Err: ", E)
 			return cleanupsockets(false)
 		if isssl:
 			brokerconnectmode = BCM_WAITING_SSL_SOCKET_CONNECTION

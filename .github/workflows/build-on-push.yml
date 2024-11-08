@@ -21,7 +21,7 @@ jobs:
         path: demo/godot-mqtt
 
 
-    - name: Create Godot Hand Pose Detector
+    - name: Create Godot MQTT
       run: |
         mkdir plugin
         mkdir plugin/godot-mqtt
@@ -38,7 +38,7 @@ jobs:
         path: plugin
 
 
-    - name: Create Godot Hand Pose Detector demo artifact
+    - name: Create Godot MQTT demo artifact
       uses: actions/upload-artifact@v4
       with:
         name: godot-mqtt_demo
