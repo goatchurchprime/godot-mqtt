@@ -241,7 +241,6 @@ func firstmessagetoserver():
 			(2+len(self.lw_topic)+2+len(self.lw_msg) if self.lw_topic else 0)
 	encoderemaininglength(pkt, sz)
 	var remstartpos = len(pkt)
-	print("MQTT".to_ascii_buffer())
 	encodevarstr(pkt, [0x4D, 0x51, 0x54, 0x54]); # "MQTT".to_ascii_buffer()
 	var protocollevel = 0x04  # MQTT v3.1.1
 	var connectflags = (0xC0 if self.user != null else 0) | \
