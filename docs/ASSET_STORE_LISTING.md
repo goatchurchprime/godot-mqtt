@@ -11,7 +11,7 @@ public wording in their own voice before submitting it for review.
 - Type: Addon
 - License: MIT
 - Version: 1.4
-- Minimum Godot version: 4.3
+- Minimum Godot version: 4.1
 - Maximum Godot version: leave unset
 - Source: https://github.com/goatchurchprime/godot-mqtt
 
@@ -22,7 +22,7 @@ WebSocket and secure WebSocket transports.
 
 ## Description facts
 
-- Supports Godot 4.3 and later.
+- Supports Godot 4.1 and later.
 - Supports MQTT 3.1.1 publish and subscribe using QoS 0 and QoS 1.
 - Supports retained messages and last-will messages.
 - Supports text and binary payloads.
