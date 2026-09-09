@@ -5,7 +5,7 @@ Godot 4 addon - to implement MQTT
 ## Installation
 
 Clone the repo and copy the `addons/mqtt` folder into your project's `addons` folder 
-(or use the AssetLib to install when 
+(or install it from the Godot Asset Library).
 
 ## Applications
 
@@ -98,9 +98,8 @@ correctly give their online statuses.
 
 There is final setting in the publish fuction, **`qos`** for "Quality of Service".  
 This tells the broker whether you want an acknowledgement that the message 
-has gotten through to it (qos=1) as well as enforce confirmation 
-and de-duplication feature (qos=2).  This has not been fully implemented in this 
-library.  
+has gotten through to it (`qos=1`). QoS 2 is not implemented and is rejected
+explicitly rather than being encoded incorrectly.
   
 
 ## Usage
@@ -148,7 +147,21 @@ Publish a message to the broker.
 * signal broker_connected()
 * signal broker_disconnected()
 * signal broker_connection_failed()
-* signal broker_connection_failed()
 * signal publish_acknowledge(id)
 
+## Tests
 
+Open `tests/mqtt_test_runner.tscn` in Godot to run the deterministic tests and
+inspect failures in the editor. The public-broker checks are opt-in because
+they require internet access and public brokers can be unavailable.
+
+The same deterministic suite can be run headlessly with:
+
+* `godot --headless --path . --script res://tests/run_headless.gd`
+
+## Development disclosure
+
+The V1.4 test suite and client-hardening changes were prepared with OpenAI
+Codex under the maintainer's direction. They are kept as one reviewable commit,
+and `docs/V1.4_MQTT_GDSCRIPT.diff` contains only the change to the addon
+GDScript. Release decisions and human review remain with the maintainer.

@@ -1,0 +1,68 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource path="res://tests/mqtt_test_runner.gd" type="Script" id="1"]
+
+[node name="MQTTTestRunner" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Layout" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Margin/Layout"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Godot MQTT deterministic tests"
+
+[node name="Explanation" type="Label" parent="Margin/Layout"]
+layout_mode = 2
+text = "These tests use no network service. Enable debugger breaking to stop at the first failed check."
+
+[node name="Controls" type="HBoxContainer" parent="Margin/Layout"]
+layout_mode = 2
+
+[node name="RunTests" type="Button" parent="Margin/Layout/Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Run deterministic tests"
+
+[node name="BreakOnFailure" type="CheckBox" parent="Margin/Layout/Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Break in debugger on failure"
+
+[node name="RunPublicTests" type="Button" parent="Margin/Layout/Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Check public brokers"
+
+[node name="Summary" type="Label" parent="Margin/Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Not run"
+
+[node name="Results" type="RichTextLabel" parent="Margin/Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+fit_content = false
+scroll_following = true
