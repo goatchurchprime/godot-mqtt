@@ -13,6 +13,12 @@ zip -q "${package_path}" \
 	addons/mqtt/README.md \
 	addons/mqtt/mqtt.gd \
 	addons/mqtt/mqtt.gd.uid \
-	addons/mqtt/mqtt.tscn
+	addons/mqtt/mqtt.tscn \
+	addons/mqtt/simulated_broker.gd \
+	addons/mqtt/simulated_broker.gd.uid \
+	addons/mqtt/simulated_broker.tscn \
+	addons/mqtt/lan_broker.gd \
+	addons/mqtt/lan_broker.gd.uid \
+	addons/mqtt/lan_broker.tscn
 
 echo "Created ${package_path}"

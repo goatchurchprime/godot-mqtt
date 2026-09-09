@@ -37,6 +37,12 @@ experimenting and exploring the features.
 There's also an even simpler **HighScoreExample** scene that demonstrates how to implement a list of 
 global high scores in a game.
 
+The **lan_broker_example** scene needs no internet connection and no separately
+installed broker. Each native instance looks for a broker advertised on the LAN.
+If it finds none, the instances elect one of themselves to run the deliberately
+limited GDScript broker. Open the scene on two computers and publish a message to
+see both clients using the same broker.
+
 ## The protocol
 
 The easiest way to understand this protocol (without using Godot or this plugin) is to [install mosquitto](https://mosquitto.org/download/), 
@@ -159,9 +165,31 @@ The same deterministic suite can be run headlessly with:
 
 * `godot --headless --path . --script res://tests/run_headless.gd`
 
+The simulated broker and LAN discovery have real-socket acceptance tests:
+
+* `godot --headless --path . --script res://tests/simulated_broker_acceptance.gd`
+* `godot --headless --path . --script res://tests/lan_broker_acceptance.gd`
+
+## LAN broker convenience
+
+Add `addons/mqtt/lan_broker.tscn` beside your MQTT client and call `start()`.
+Its `broker_available(url, hosted_here)` signal supplies the TCP URL to pass to
+`connect_to_broker()`. UDP carries only small, versioned discovery and election
+messages; all application signalling still uses MQTT.
+
+LAN discovery and the simulated broker are for trusted native LAN development.
+They have no authentication, TLS, persistence or WebSocket listener. Web exports
+cannot host or discover them and should use an explicitly configured `ws://` or
+`wss://` broker. See `docs/SIMULATED_BROKER_SCOPE.md` for the supported subset.
+
 ## Development disclosure
 
 The V1.4 test suite and client-hardening changes were prepared with OpenAI
 Codex under the maintainer's direction. They are kept as one reviewable commit,
 and `docs/V1.4_MQTT_GDSCRIPT.diff` contains only the change to the addon
 GDScript. Release decisions and human review remain with the maintainer.
+
+The subsequent simulated-broker and LAN-discovery implementation was also
+prepared with Codex under the maintainer's direction. It is split into small
+local commits and accompanied by `docs/LAN_DEMO_REVIEW.md` so its interface and
+limitations can be exercised and revised before release.
