@@ -27,6 +27,10 @@ bg_color = Color(0.341176, 0.101961, 0.0392157, 1)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_njfq6"]
 bg_color = Color(0.0156863, 0.133333, 0.0431373, 1)
 
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_b2aj5"]
+color = Color(0.8605991, 0.8152067, 0.12867396, 1)
+thickness = 3
+
 [node name="mqttexample" type="Control" unique_id=2137024222]
 layout_mode = 3
 anchors_preset = 15
@@ -80,7 +84,7 @@ text = "URL: "
 [node name="brokeraddress" type="LineEdit" parent="VBox/HBoxBroker" unique_id=653611529]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "broker.hivemq.com"
+text = "test.mosquitto.org"
 
 [node name="Label4" type="Label" parent="VBox/HBoxBroker" unique_id=263206045]
 layout_mode = 2
@@ -260,7 +264,7 @@ text = "[b]Instructions[/b]
 
 MQTT is a lightweight easy-to-use publish and subscribe (\"pubsub\") networking protocol.
 
-By default this app connects to the public server hosted at [u]https://test.mosquitto.org/[/u] , but you can connect to another broker or your own instance.
+By default this app connects to the public server hosted at [u]test.mosquitto.org[/u] , but you can connect to another broker or your own instance, or even to a locally simulated instance by clicking on [i]Enabled[/i] below.
 
 [i]Commands to run on another computer terminal:[/i]
   > mosquitto_pub -h test.mosquitto.org -t \"godot/abcd\" -m \"Bingo!\"
@@ -268,10 +272,12 @@ By default this app connects to the public server hosted at [u]https://test.mosq
 selection_enabled = true
 
 [node name="HSeparator5" type="HSeparator" parent="VBox" unique_id=1300342477]
-custom_minimum_size = Vector2(0, 10)
+custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
+theme_override_styles/separator = SubResource("StyleBoxLine_b2aj5")
 
 [node name="HBoxSimulatedBroker" type="HBoxContainer" parent="VBox" unique_id=1513268641]
+modulate = Color(1, 1, 0.5176471, 1)
 layout_mode = 2
 
 [node name="Labelbroker" type="Label" parent="VBox/HBoxSimulatedBroker" unique_id=1155650323]

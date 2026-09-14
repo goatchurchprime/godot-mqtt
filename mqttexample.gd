@@ -118,6 +118,8 @@ func _on_unsubscribe_pressed():
 func _on_button_sim_broker_start_toggled(toggled_on):
 	if toggled_on:
 		$MQTTSimulatedBroker.start(int($VBox/HBoxSimulatedBroker/brokerport.value))
+		$VBox/HBoxBroker/brokeraddress.text = "localhost"
+		$VBox/HBoxBroker/brokerport.text = "%d" % $VBox/HBoxSimulatedBroker/brokerport.value
 	else:
 		$MQTTSimulatedBroker.stop()
 
