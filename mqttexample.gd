@@ -112,3 +112,23 @@ func _on_unsubscribe_pressed():
 	$VBox/HBoxSubscriptions/unsubscribe.disabled = (seloptbutt.item_count == 0)
 	if seloptbutt.item_count != 0:
 		seloptbutt.select(min(sel, seloptbutt.item_count - 1))
+
+
+# Running the simulated broker
+func _on_button_sim_broker_start_toggled(toggled_on):
+	if toggled_on:
+		$MQTTSimulatedBroker.start(int($VBox/HBoxSimulatedBroker/brokerport.value))
+	else:
+		$MQTTSimulatedBroker.stop()
+
+func _on_mqtt_simulated_broker_broker_started(port):
+	$VBox/HBoxSimulatedBroker/status.text = "Running."
+
+func _on_mqtt_simulated_broker_broker_stopped():
+	$VBox/HBoxSimulatedBroker/status.text = "Stopped."
+
+func _on_mqtt_simulated_broker_client_connected(client_id):
+	$VBox/HBoxSimulatedBroker/ClientCount.text = "Clients: %d" % len($MQTTSimulatedBroker._clients)
+
+func _on_mqtt_simulated_broker_client_disconnected(client_id, unexpected):
+	$VBox/HBoxSimulatedBroker/ClientCount.text = "Clients: %d" % len($MQTTSimulatedBroker._clients)

@@ -199,7 +199,9 @@ func _handle_connect(client: Dictionary, packet: PackedByteArray, offset: int) -
 		return false
 	var client_id := _read_utf8(packet, cursor)
 	if client_id.is_empty():
-		return _protocol_error(client, "empty client identifier")
+		client_id = "mosq-%05d" % randi_range(10000,99999) # supposed to be set on v3.1 from mosquitto, but isn't https://mosquitto.org/man/mosquitto_sub-1.html
+		_report("Empty client id given: %s" % client_id)
+		#return _protocol_error(client, "empty client identifier")
 	if flags & 0x04:
 		var will_topic := _read_utf8(packet, cursor)
 		var will_payload := _read_bytes(packet, cursor)

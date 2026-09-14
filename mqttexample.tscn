@@ -1,7 +1,8 @@
-[gd_scene load_steps=8 format=3 uid="uid://sca5nhn6lprk"]
+[gd_scene format=3 uid="uid://sca5nhn6lprk"]
 
-[ext_resource type="Script" path="res://mqttexample.gd" id="1_6i2w6"]
+[ext_resource type="Script" uid="uid://ceq0eawsho3at" path="res://mqttexample.gd" id="1_6i2w6"]
 [ext_resource type="PackedScene" uid="uid://ktm7k0co2o7l" path="res://addons/mqtt/mqtt.tscn" id="2_t6rxa"]
+[ext_resource type="Script" uid="uid://bvc0jl61su4fd" path="res://addons/mqtt/simulated_broker.gd" id="3_b2aj5"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_iasn2"]
 content_margin_left = 5.0
@@ -26,7 +27,7 @@ bg_color = Color(0.341176, 0.101961, 0.0392157, 1)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_njfq6"]
 bg_color = Color(0.0156863, 0.133333, 0.0431373, 1)
 
-[node name="mqttexample" type="Control"]
+[node name="mqttexample" type="Control" unique_id=2137024222]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -39,9 +40,9 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_6i2w6")
 
-[node name="MQTT" parent="." instance=ExtResource("2_t6rxa")]
+[node name="MQTT" parent="." unique_id=113971353 instance=ExtResource("2_t6rxa")]
 
-[node name="VBox" type="VBoxContainer" parent="."]
+[node name="VBox" type="VBoxContainer" parent="." unique_id=627096762]
 self_modulate = Color(0.0588235, 1, 1, 1)
 layout_mode = 0
 offset_left = 137.0
@@ -49,71 +50,72 @@ offset_top = 82.0
 offset_right = 1017.0
 offset_bottom = 576.0
 
-[node name="HBoxBrokerControl" type="HBoxContainer" parent="VBox"]
+[node name="HBoxBrokerControl" type="HBoxContainer" parent="VBox" unique_id=1651150164]
 layout_mode = 2
 
-[node name="Labelbroker" type="Label" parent="VBox/HBoxBrokerControl"]
+[node name="Labelbroker" type="Label" parent="VBox/HBoxBrokerControl" unique_id=1371117770]
 layout_mode = 2
 theme_type_variation = &"HeaderLarge"
-text = "MQTT broker:"
+text = "MQTT client:"
 
-[node name="ButtonConnect" type="CheckButton" parent="VBox/HBoxBrokerControl"]
+[node name="ButtonConnect" type="CheckButton" parent="VBox/HBoxBrokerControl" unique_id=916497837]
 layout_mode = 2
 size_flags_horizontal = 6
 text = "Connect to broker"
 
-[node name="status" type="Label" parent="VBox/HBoxBrokerControl"]
+[node name="status" type="Label" parent="VBox/HBoxBrokerControl" unique_id=1302297339]
 layout_mode = 2
 size_flags_horizontal = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_iasn2")
 text = "...Status"
 horizontal_alignment = 1
 
-[node name="HBoxBroker" type="HBoxContainer" parent="VBox"]
+[node name="HBoxBroker" type="HBoxContainer" parent="VBox" unique_id=198437947]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBox/HBoxBroker"]
+[node name="Label" type="Label" parent="VBox/HBoxBroker" unique_id=719847267]
 layout_mode = 2
 text = "URL: "
 
-[node name="brokeraddress" type="LineEdit" parent="VBox/HBoxBroker"]
+[node name="brokeraddress" type="LineEdit" parent="VBox/HBoxBroker" unique_id=653611529]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "broker.hivemq.com"
 
-[node name="Label4" type="Label" parent="VBox/HBoxBroker"]
+[node name="Label4" type="Label" parent="VBox/HBoxBroker" unique_id=263206045]
 layout_mode = 2
 text = "User:"
 
-[node name="brokeruser" type="LineEdit" parent="VBox/HBoxBroker"]
+[node name="brokeruser" type="LineEdit" parent="VBox/HBoxBroker" unique_id=2103834007]
 layout_mode = 2
 
-[node name="Label5" type="Label" parent="VBox/HBoxBroker"]
+[node name="Label5" type="Label" parent="VBox/HBoxBroker" unique_id=1018544846]
 layout_mode = 2
 text = "Pswd:"
 
-[node name="brokerpswd" type="LineEdit" parent="VBox/HBoxBroker"]
+[node name="brokerpswd" type="LineEdit" parent="VBox/HBoxBroker" unique_id=1893199102]
 layout_mode = 2
 
-[node name="Label2" type="Label" parent="VBox/HBoxBroker"]
+[node name="Label2" type="Label" parent="VBox/HBoxBroker" unique_id=1040441631]
 layout_mode = 2
 text = "Port: "
 
-[node name="brokerport" type="LineEdit" parent="VBox/HBoxBroker"]
+[node name="brokerport" type="LineEdit" parent="VBox/HBoxBroker" unique_id=1578619314]
 layout_mode = 2
 tooltip_text = "Port
 "
 text = "1883"
 
-[node name="Label3" type="Label" parent="VBox/HBoxBroker"]
+[node name="Label3" type="Label" parent="VBox/HBoxBroker" unique_id=556724612]
 layout_mode = 2
 text = "Protocol: "
 
-[node name="brokerprotocol" type="OptionButton" parent="VBox/HBoxBroker"]
+[node name="brokerprotocol" type="OptionButton" parent="VBox/HBoxBroker" unique_id=1183423742]
 layout_mode = 2
 selected = 0
 item_count = 4
 popup/item_0/text = "tcp://"
+popup/item_0/id = 0
 popup/item_1/text = "ssl://"
 popup/item_1/id = 1
 popup/item_2/text = "ws://"
@@ -121,71 +123,71 @@ popup/item_2/id = 2
 popup/item_3/text = "wss://"
 popup/item_3/id = 3
 
-[node name="HSeparator" type="HSeparator" parent="VBox"]
+[node name="HSeparator" type="HSeparator" parent="VBox" unique_id=240597933]
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 
-[node name="HBoxLastwill" type="HBoxContainer" parent="VBox"]
+[node name="HBoxLastwill" type="HBoxContainer" parent="VBox" unique_id=1066457401]
 layout_mode = 2
 
-[node name="Labellastwill" type="Label" parent="VBox/HBoxLastwill"]
+[node name="Labellastwill" type="Label" parent="VBox/HBoxLastwill" unique_id=1707755413]
 layout_mode = 2
 theme_type_variation = &"HeaderMedium"
 text = "Last will:"
 
-[node name="Label" type="Label" parent="VBox/HBoxLastwill"]
+[node name="Label" type="Label" parent="VBox/HBoxLastwill" unique_id=854112594]
 layout_mode = 2
 size_flags_horizontal = 10
 text = "topic:"
 
-[node name="lastwilltopic" type="LineEdit" parent="VBox/HBoxLastwill"]
+[node name="lastwilltopic" type="LineEdit" parent="VBox/HBoxLastwill" unique_id=1133549490]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "godot/myname/mywill"
 
-[node name="Label2" type="Label" parent="VBox/HBoxLastwill"]
+[node name="Label2" type="Label" parent="VBox/HBoxLastwill" unique_id=1220928046]
 layout_mode = 2
 text = "message:"
 
-[node name="lastwillmessage" type="LineEdit" parent="VBox/HBoxLastwill"]
+[node name="lastwillmessage" type="LineEdit" parent="VBox/HBoxLastwill" unique_id=711389847]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "goodbye world"
 
-[node name="lastwillretain" type="CheckButton" parent="VBox/HBoxLastwill"]
+[node name="lastwillretain" type="CheckButton" parent="VBox/HBoxLastwill" unique_id=1018752704]
 layout_mode = 2
 text = "Retain
 "
 
-[node name="HSeparator2" type="HSeparator" parent="VBox"]
+[node name="HSeparator2" type="HSeparator" parent="VBox" unique_id=867028284]
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 
-[node name="HBoxSubscriptions" type="HBoxContainer" parent="VBox"]
+[node name="HBoxSubscriptions" type="HBoxContainer" parent="VBox" unique_id=1395386265]
 layout_mode = 2
 
-[node name="Labellastwill2" type="Label" parent="VBox/HBoxSubscriptions"]
+[node name="Labellastwill2" type="Label" parent="VBox/HBoxSubscriptions" unique_id=2062012154]
 layout_mode = 2
 theme_type_variation = &"HeaderMedium"
 text = "Subscriptions:"
 
-[node name="Label3" type="Label" parent="VBox/HBoxSubscriptions"]
+[node name="Label3" type="Label" parent="VBox/HBoxSubscriptions" unique_id=1007739499]
 layout_mode = 2
 size_flags_horizontal = 10
 text = "topic:"
 
-[node name="subscribetopic" type="LineEdit" parent="VBox/HBoxSubscriptions"]
+[node name="subscribetopic" type="LineEdit" parent="VBox/HBoxSubscriptions" unique_id=226155410]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "godot/+"
 
-[node name="subscribe" type="Button" parent="VBox/HBoxSubscriptions"]
+[node name="subscribe" type="Button" parent="VBox/HBoxSubscriptions" unique_id=665653558]
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_ppk4t")
 text = "subscribe
 "
 
-[node name="subscriptions" type="OptionButton" parent="VBox/HBoxSubscriptions"]
+[node name="subscriptions" type="OptionButton" parent="VBox/HBoxSubscriptions" unique_id=497350372]
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 size_flags_horizontal = 10
@@ -194,60 +196,61 @@ tooltip_text = "Subscribed topics
 selected = 0
 item_count = 1
 popup/item_0/text = "<none>"
+popup/item_0/id = 0
 
-[node name="unsubscribe" type="Button" parent="VBox/HBoxSubscriptions"]
+[node name="unsubscribe" type="Button" parent="VBox/HBoxSubscriptions" unique_id=210450813]
 layout_mode = 2
 theme_override_constants/outline_size = 0
 theme_override_styles/normal = SubResource("StyleBoxFlat_8b54y")
 text = "unsubscribe
 "
 
-[node name="HSeparator3" type="HSeparator" parent="VBox"]
+[node name="HSeparator3" type="HSeparator" parent="VBox" unique_id=1421438960]
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 
-[node name="HBoxPublish" type="HBoxContainer" parent="VBox"]
+[node name="HBoxPublish" type="HBoxContainer" parent="VBox" unique_id=1434683943]
 layout_mode = 2
 
-[node name="Labellastwill" type="Label" parent="VBox/HBoxPublish"]
+[node name="Labellastwill" type="Label" parent="VBox/HBoxPublish" unique_id=896312727]
 layout_mode = 2
 theme_type_variation = &"HeaderMedium"
 text = "Publish:"
 
-[node name="Label" type="Label" parent="VBox/HBoxPublish"]
+[node name="Label" type="Label" parent="VBox/HBoxPublish" unique_id=1902265217]
 layout_mode = 2
 size_flags_horizontal = 10
 text = "topic:"
 
-[node name="publishtopic" type="LineEdit" parent="VBox/HBoxPublish"]
+[node name="publishtopic" type="LineEdit" parent="VBox/HBoxPublish" unique_id=1751086907]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "godot/myname"
 
-[node name="Label2" type="Label" parent="VBox/HBoxPublish"]
+[node name="Label2" type="Label" parent="VBox/HBoxPublish" unique_id=1293067307]
 layout_mode = 2
 text = "message:"
 
-[node name="publishmessage" type="LineEdit" parent="VBox/HBoxPublish"]
+[node name="publishmessage" type="LineEdit" parent="VBox/HBoxPublish" unique_id=1362078398]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "hello there"
 
-[node name="publishretain" type="CheckButton" parent="VBox/HBoxPublish"]
+[node name="publishretain" type="CheckButton" parent="VBox/HBoxPublish" unique_id=254485007]
 layout_mode = 2
 text = "Retain
 "
 
-[node name="publish" type="Button" parent="VBox/HBoxPublish"]
+[node name="publish" type="Button" parent="VBox/HBoxPublish" unique_id=1695996867]
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_xasl1")
 text = "Publish"
 
-[node name="HSeparator4" type="HSeparator" parent="VBox"]
+[node name="HSeparator4" type="HSeparator" parent="VBox" unique_id=2127024689]
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 
-[node name="subscribedmessages" type="RichTextLabel" parent="VBox"]
+[node name="subscribedmessages" type="RichTextLabel" parent="VBox" unique_id=117222208]
 layout_mode = 2
 size_flags_vertical = 3
 focus_mode = 2
@@ -264,6 +267,49 @@ By default this app connects to the public server hosted at [u]https://test.mosq
   > mosquitto_sub -v -h test.mosquitto.org -t \"godot/#\""
 selection_enabled = true
 
+[node name="HSeparator5" type="HSeparator" parent="VBox" unique_id=1300342477]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="HBoxSimulatedBroker" type="HBoxContainer" parent="VBox" unique_id=1513268641]
+layout_mode = 2
+
+[node name="Labelbroker" type="Label" parent="VBox/HBoxSimulatedBroker" unique_id=1155650323]
+layout_mode = 2
+theme_type_variation = &"HeaderLarge"
+text = "MQTT simulated broker:          "
+
+[node name="Label2" type="Label" parent="VBox/HBoxSimulatedBroker" unique_id=1903031370]
+layout_mode = 2
+text = "Port: "
+
+[node name="brokerport" type="SpinBox" parent="VBox/HBoxSimulatedBroker" unique_id=779492617]
+layout_mode = 2
+tooltip_text = "Port
+"
+max_value = 65535.0
+value = 1883.0
+
+[node name="ButtonSimBrokerStart" type="CheckButton" parent="VBox/HBoxSimulatedBroker" unique_id=1595886363]
+layout_mode = 2
+size_flags_horizontal = 6
+text = "Enabled"
+
+[node name="status" type="Label" parent="VBox/HBoxSimulatedBroker" unique_id=1050515930]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_iasn2")
+text = "...Status"
+horizontal_alignment = 1
+
+[node name="ClientCount" type="Label" parent="VBox/HBoxSimulatedBroker" unique_id=504317944]
+layout_mode = 2
+text = "Clients:  "
+
+[node name="MQTTSimulatedBroker" type="Node" parent="." unique_id=1522912017]
+script = ExtResource("3_b2aj5")
+metadata/_custom_type_script = "uid://bvc0jl61su4fd"
+
 [connection signal="broker_connected" from="MQTT" to="." method="_on_mqtt_broker_connected"]
 [connection signal="broker_connection_failed" from="MQTT" to="." method="_on_mqtt_broker_connection_failed"]
 [connection signal="broker_disconnected" from="MQTT" to="." method="_on_mqtt_broker_disconnected"]
@@ -273,3 +319,8 @@ selection_enabled = true
 [connection signal="pressed" from="VBox/HBoxSubscriptions/subscribe" to="." method="_on_subscribe_pressed"]
 [connection signal="pressed" from="VBox/HBoxSubscriptions/unsubscribe" to="." method="_on_unsubscribe_pressed"]
 [connection signal="pressed" from="VBox/HBoxPublish/publish" to="." method="_on_publish_pressed"]
+[connection signal="toggled" from="VBox/HBoxSimulatedBroker/ButtonSimBrokerStart" to="." method="_on_button_sim_broker_start_toggled"]
+[connection signal="broker_started" from="MQTTSimulatedBroker" to="." method="_on_mqtt_simulated_broker_broker_started"]
+[connection signal="broker_stopped" from="MQTTSimulatedBroker" to="." method="_on_mqtt_simulated_broker_broker_stopped"]
+[connection signal="client_connected" from="MQTTSimulatedBroker" to="." method="_on_mqtt_simulated_broker_client_connected"]
+[connection signal="client_disconnected" from="MQTTSimulatedBroker" to="." method="_on_mqtt_simulated_broker_client_disconnected"]
