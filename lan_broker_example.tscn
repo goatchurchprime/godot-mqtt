@@ -1,10 +1,10 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene format=3 uid="uid://c8kadrh8hxmxp"]
 
-[ext_resource type="Script" path="res://lan_broker_example.gd" id="1"]
-[ext_resource type="PackedScene" path="res://addons/mqtt/mqtt.tscn" id="2"]
+[ext_resource type="Script" uid="uid://bcxocg0vpi0xs" path="res://lan_broker_example.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://ktm7k0co2o7l" path="res://addons/mqtt/mqtt.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://addons/mqtt/lan_broker.tscn" id="3"]
 
-[node name="LANBrokerExample" type="Control"]
+[node name="LANBrokerExample" type="Control" unique_id=568562724]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -13,12 +13,12 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1")
 
-[node name="MQTT" parent="." instance=ExtResource("2")]
+[node name="MQTT" parent="." unique_id=1309891334 instance=ExtResource("2")]
 verbose_level = 1
 
-[node name="LANBroker" parent="." instance=ExtResource("3")]
+[node name="LANBroker" parent="." unique_id=1920546851 instance=ExtResource("3")]
 
-[node name="Margin" type="MarginContainer" parent="."]
+[node name="Margin" type="MarginContainer" parent="." unique_id=776839222]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -30,38 +30,39 @@ offset_bottom = -24.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBox" type="VBoxContainer" parent="Margin"]
+[node name="VBox" type="VBoxContainer" parent="Margin" unique_id=1921332994]
 layout_mode = 2
 
-[node name="Title" type="Label" parent="Margin/VBox"]
+[node name="Title" type="Label" parent="Margin/VBox" unique_id=1339504854]
 layout_mode = 2
 theme_type_variation = &"HeaderLarge"
 text = "MQTT on a LAN"
 
-[node name="Explanation" type="Label" parent="Margin/VBox"]
+[node name="Explanation" type="Label" parent="Margin/VBox" unique_id=1148588432]
 layout_mode = 2
 text = "Looks for an advertised broker. If none appears, the LAN instances elect one to host a small simulated broker."
 autowrap_mode = 2
 
-[node name="Status" type="Label" parent="Margin/VBox"]
+[node name="Status" type="Label" parent="Margin/VBox" unique_id=1526540352]
 layout_mode = 2
 text = "Starting LAN discovery..."
 
-[node name="SendRow" type="HBoxContainer" parent="Margin/VBox"]
+[node name="SendRow" type="HBoxContainer" parent="Margin/VBox" unique_id=1256672308]
 layout_mode = 2
 
-[node name="Message" type="LineEdit" parent="Margin/VBox/SendRow"]
+[node name="Message" type="LineEdit" parent="Margin/VBox/SendRow" unique_id=1485111335]
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "Message to all demo instances"
 
-[node name="Send" type="Button" parent="Margin/VBox/SendRow"]
+[node name="Send" type="Button" parent="Margin/VBox/SendRow" unique_id=1468723566]
 layout_mode = 2
 text = "Publish"
 
-[node name="Log" type="RichTextLabel" parent="Margin/VBox"]
+[node name="Log" type="RichTextLabel" parent="Margin/VBox" unique_id=1870682241]
 layout_mode = 2
 size_flags_vertical = 3
+focus_mode = 2
 selection_enabled = true
 
 [connection signal="text_submitted" from="Margin/VBox/SendRow/Message" to="." method="_on_message_submitted"]

@@ -11,11 +11,13 @@ var regexscores = RegEx.new()
 
 func _ready():
 	randomize()
+	regexscores.compile("^\\w+/(\\w+)/score")
+	newscore()
+	_on_fetch_scores_pressed()
+
+func newscore():
 	$VBox/HBoxPlayername/LineEdit.text = possibleusernames[randi()%len(possibleusernames)]
 	$VBox/HBoxHighScore/LineEdit.text = "%d" % (randi()%1000)
-	regexscores.compile("^\\w+/(\\w+)/score")
-	#$MQTT.verbose_level = 0
-	_on_fetch_scores_pressed()
 
 func _on_mqtt_broker_connected():
 	# this quality of service means we get an acknowledgement message back from the broker
@@ -31,6 +33,7 @@ func _on_mqtt_broker_connected():
 	else:
 		var topic = "%s/%s/score" % [$VBox/HBoxGamename/LineEdit.text, $VBox/HBoxPlayername/LineEdit.text]
 		$MQTT.publish(topic, $VBox/HBoxHighScore/LineEdit.text, true, qos)
+		newscore()
 
 func _on_mqtt_broker_connection_failed():
 	print("Connection failed")
