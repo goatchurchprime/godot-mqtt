@@ -24,7 +24,9 @@ var node_id := ""
 
 var _receiver: UDPServer
 var _broadcaster: PacketPeerUDP
+var _local_probe: StreamPeerTCP
 var _broker: MQTTSimulatedBroker
+var _can_receive_broadcasts := false
 var _candidates: Dictionary = {}
 var _phase_ends_msec := 0
 var _next_announce_msec := 0
@@ -39,9 +41,10 @@ func start() -> int:
 	if error != OK:
 		return error
 	node_id = _make_node_id()
+	_begin_local_probe()
 	state = State.SEARCHING
 	_phase_ends_msec = Time.get_ticks_msec() + int(discovery_seconds * 1000.0)
-	_send_broadcast("probe")
+	_send_probe()
 	set_process(true)
 	_report("Looking for a LAN MQTT broker")
 	return OK
@@ -57,7 +60,7 @@ func start_hosting() -> int:
 		return error
 	node_id = _make_node_id()
 	set_process(true)
-	return _start_broker()
+	return _start_broker(false)
 
 
 func stop() -> void:
@@ -69,6 +72,10 @@ func stop() -> void:
 		_receiver.stop()
 		_receiver = null
 	_broadcaster = null
+	if _local_probe != null:
+		_local_probe.disconnect_from_host()
+		_local_probe = null
+	_can_receive_broadcasts = false
 	state = State.STOPPED
 	broker_url = ""
 	set_process(false)
@@ -87,15 +94,20 @@ func _exit_tree() -> void:
 
 
 func _process(_delta: float) -> void:
+	_poll_local_probe()
 	_receive_packets()
 	var now := Time.get_ticks_msec()
 	match state:
 		State.SEARCHING:
 			if now >= _phase_ends_msec:
-				state = State.ELECTING
-				_candidates = {node_id: true}
-				_phase_ends_msec = now + int(election_seconds * 1000.0)
-				_next_announce_msec = 0
+				if _can_receive_broadcasts:
+					state = State.ELECTING
+					_candidates = {node_id: true}
+					_phase_ends_msec = now + int(election_seconds * 1000.0)
+					_next_announce_msec = 0
+				else:
+					_phase_ends_msec = now + int(discovery_seconds * 1000.0)
+					_send_probe()
 		State.ELECTING:
 			if now >= _next_announce_msec:
 				_send_broadcast("candidate")
@@ -112,9 +124,14 @@ func _open_udp() -> int:
 	_receiver = UDPServer.new()
 	var error := _receiver.listen(discovery_port)
 	if error != OK:
+		_report("UDP port %d is already in use; joining through a probe socket" % discovery_port)
 		_receiver = null
-		return _fail("Could not listen for broker discovery on UDP port %d (error %d)" % [discovery_port, error])
+	else:
+		_can_receive_broadcasts = true
 	_broadcaster = PacketPeerUDP.new()
+	error = _broadcaster.bind(0)
+	if error != OK:
+		return _fail("Could not open UDP probe socket (error %d)" % error)
 	_broadcaster.set_broadcast_enabled(true)
 	error = _broadcaster.set_dest_address("255.255.255.255", discovery_port)
 	if error != OK:
@@ -125,22 +142,49 @@ func _open_udp() -> int:
 	return OK
 
 
+func _begin_local_probe() -> void:
+	_local_probe = StreamPeerTCP.new()
+	var error := _local_probe.connect_to_host("127.0.0.1", broker_port)
+	if error != OK:
+		_local_probe = null
+
+
+func _poll_local_probe() -> void:
+	if _local_probe == null or state != State.SEARCHING:
+		return
+	_local_probe.poll()
+	match _local_probe.get_status():
+		StreamPeerTCP.STATUS_CONNECTED:
+			_local_probe.disconnect_from_host()
+			_local_probe = null
+			_use_offer("127.0.0.1", broker_port)
+		StreamPeerTCP.STATUS_ERROR:
+			_local_probe = null
+
+
 func _receive_packets() -> void:
-	_receiver.poll()
-	while _receiver.is_connection_available():
-		var peer := _receiver.take_connection()
-		while peer.get_available_packet_count() > 0:
-			var message := _decode_message(peer.get_packet())
-			if message.is_empty() or message.get("node_id", "") == node_id:
-				continue
-			var kind: String = message.kind
-			if kind == "offer":
-				_use_offer(peer.get_packet_ip(), int(message.get("port", 0)))
-			elif kind == "probe" and state == State.HOSTING:
-				peer.put_packet(_encode_message("offer", broker_port))
-				_send_broadcast("offer", broker_port)
-			elif kind == "candidate" and state == State.ELECTING:
-				_candidates[message.node_id] = true
+	if _receiver != null:
+		_receiver.poll()
+		while _receiver.is_connection_available():
+			var peer := _receiver.take_connection()
+			while peer.get_available_packet_count() > 0:
+				_handle_message(_decode_message(peer.get_packet()), peer.get_packet_ip(), peer)
+	while _broadcaster.get_available_packet_count() > 0:
+		_handle_message(_decode_message(_broadcaster.get_packet()), _broadcaster.get_packet_ip())
+
+
+func _handle_message(message: Dictionary, address: String, reply_peer: PacketPeerUDP = null) -> void:
+	if message.is_empty() or message.get("node_id", "") == node_id:
+		return
+	var kind: String = message.kind
+	if kind == "offer":
+		_use_offer(address, int(message.get("port", 0)))
+	elif kind == "probe" and state == State.HOSTING:
+		if reply_peer != null:
+			reply_peer.put_packet(_encode_message("offer", broker_port))
+		_send_broadcast("offer", broker_port)
+	elif kind == "candidate" and state == State.ELECTING:
+		_candidates[message.node_id] = true
 
 
 func _finish_election() -> void:
@@ -154,7 +198,10 @@ func _finish_election() -> void:
 		_report("Waiting for elected broker %s" % candidate_ids[0])
 
 
-func _start_broker() -> int:
+func _start_broker(join_existing: bool = true) -> int:
+	if _local_probe != null:
+		_local_probe.disconnect_from_host()
+		_local_probe = null
 	_broker = SimulatedBroker.new()
 	_broker.verbose = verbose
 	add_child(_broker)
@@ -162,6 +209,12 @@ func _start_broker() -> int:
 	if error != OK:
 		_broker.queue_free()
 		_broker = null
+		if join_existing:
+			state = State.SEARCHING
+			_phase_ends_msec = Time.get_ticks_msec() + int(discovery_seconds * 1000.0)
+			_begin_local_probe()
+			_report("TCP port %d is already in use; checking for the elected broker" % broker_port)
+			return OK
 		return _fail("Could not start the simulated broker on TCP port %d" % broker_port)
 	state = State.HOSTING
 	broker_url = "tcp://127.0.0.1:%d" % broker_port
@@ -178,14 +231,26 @@ func _use_offer(address: String, offered_port: int) -> void:
 		return
 	state = State.USING_REMOTE
 	broker_url = "tcp://%s:%d" % [address, offered_port]
+	if _local_probe != null:
+		_local_probe.disconnect_from_host()
+		_local_probe = null
 	_report("Using LAN MQTT broker at %s" % broker_url)
 	broker_available.emit(broker_url, false)
 
 
 func _send_broadcast(kind: String, offered_port: int = 0) -> void:
+	_broadcaster.set_dest_address("255.255.255.255", discovery_port)
 	var error := _broadcaster.put_packet(_encode_message(kind, offered_port))
 	if error != OK:
 		_report("UDP broker discovery send failed (error %d)" % error)
+
+
+func _send_probe() -> void:
+	_send_broadcast("probe")
+	_broadcaster.set_dest_address("127.0.0.1", discovery_port)
+	var error := _broadcaster.put_packet(_encode_message("probe"))
+	if error != OK:
+		_report("Local broker discovery probe failed (error %d)" % error)
 
 
 func _encode_message(kind: String, offered_port: int = 0) -> PackedByteArray:

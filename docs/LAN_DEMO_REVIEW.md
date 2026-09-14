@@ -33,8 +33,10 @@ The LAN packet format is deliberately readable JSON. Search for
 ## Current boundaries
 
 - This assumes a friendly LAN. There is no authentication or encryption.
-- Each computer needs UDP port 1884; running two discovery instances on one
-  computer may fail because both try to bind it.
+- UDP port 1884 carries discovery between computers. Additional instances on
+  the same computer also probe the configured MQTT port through localhost,
+  because operating systems do not reliably deliver one UDP packet to every
+  process sharing a port.
 - The simulated broker listens on TCP 1883 by default and keeps retained values
   only in memory.
 - Browser exports cannot use raw UDP or TCP. They need an explicit WebSocket
