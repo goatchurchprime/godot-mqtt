@@ -30,6 +30,24 @@ var _can_receive_broadcasts := false
 var _candidates: Dictionary = {}
 var _phase_ends_msec := 0
 var _next_announce_msec := 0
+var _fault_profile: Dictionary = {}
+
+
+func configure_faults(options: Dictionary = {}) -> void:
+	_fault_profile = options.duplicate(true)
+	if _broker != null:
+		_broker.configure_faults(_fault_profile)
+
+
+func hold_deliveries(duration_ms: int) -> int:
+	if _broker == null:
+		return ERR_UNAVAILABLE
+	_broker.hold_deliveries(duration_ms)
+	return OK
+
+
+func get_fault_counters() -> Dictionary:
+	return _broker.get_fault_counters() if _broker != null else {}
 
 
 func start() -> int:
@@ -205,6 +223,8 @@ func _start_broker(join_existing: bool = true) -> int:
 	_broker = SimulatedBroker.new()
 	_broker.verbose = verbose
 	add_child(_broker)
+	if not _fault_profile.is_empty():
+		_broker.configure_faults(_fault_profile)
 	var error := _broker.start(broker_port)
 	if error != OK:
 		_broker.queue_free()

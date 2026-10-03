@@ -22,6 +22,18 @@ const CP_DISCONNECT = 0xe0
 const MAX_PACKET_SIZE = 2097151
 const MAX_PACKETS_PER_CLIENT_PER_FRAME = 32
 
+const DEFAULT_FAULT_PROFILE := {
+	"enabled": false,
+	"seed": 1,
+	"topic_filters": [],
+	"latency_ms": 0,
+	"jitter_ms": 0,
+	"loss_rate": 0.0,
+	"duplicate_rate": 0.0,
+	"reorder_ms": 0,
+	"disconnect_after": 0,
+}
+
 @export var port := 1883
 @export var bind_address := "*"
 @export var verbose := true
@@ -29,6 +41,60 @@ const MAX_PACKETS_PER_CLIENT_PER_FRAME = 32
 var _server: TCPServer
 var _clients: Array[Dictionary] = []
 var _retained: Dictionary = {}
+var _fault_profile := DEFAULT_FAULT_PROFILE.duplicate(true)
+var _fault_rng := RandomNumberGenerator.new()
+var _fault_sequence := 0
+var _hold_until_msec := 0
+var _fault_counters := {
+	"matched": 0,
+	"queued": 0,
+	"delivered": 0,
+	"dropped": 0,
+	"duplicated": 0,
+	"reordered": 0,
+	"interrupted": 0,
+}
+
+
+func configure_faults(options: Dictionary = {}) -> void:
+	_fault_profile = DEFAULT_FAULT_PROFILE.duplicate(true)
+	for key in options:
+		if _fault_profile.has(key):
+			_fault_profile[key] = options[key]
+	_fault_profile.enabled = bool(_fault_profile.enabled)
+	_fault_profile.seed = int(_fault_profile.seed)
+	_fault_profile.latency_ms = maxi(0, int(_fault_profile.latency_ms))
+	_fault_profile.jitter_ms = maxi(0, int(_fault_profile.jitter_ms))
+	_fault_profile.loss_rate = clampf(float(_fault_profile.loss_rate), 0.0, 1.0)
+	_fault_profile.duplicate_rate = clampf(float(_fault_profile.duplicate_rate), 0.0, 1.0)
+	_fault_profile.reorder_ms = maxi(0, int(_fault_profile.reorder_ms))
+	_fault_profile.disconnect_after = maxi(0, int(_fault_profile.disconnect_after))
+	_fault_profile.topic_filters = PackedStringArray(_fault_profile.topic_filters)
+	_fault_rng.seed = _fault_profile.seed
+	_fault_sequence = 0
+	_hold_until_msec = 0
+	_reset_fault_counters()
+	for client in _clients:
+		client.outbound_queue.clear()
+	_report("Fault profile configured: %s" % JSON.stringify(_fault_profile))
+
+
+func clear_faults() -> void:
+	configure_faults()
+
+
+func hold_deliveries(duration_ms: int) -> void:
+	_hold_until_msec = Time.get_ticks_msec() + maxi(0, duration_ms)
+	_report("Holding matching PUBLISH deliveries for %d ms" % maxi(0, duration_ms))
+
+
+func get_fault_counters() -> Dictionary:
+	return _fault_counters.duplicate()
+
+
+func _reset_fault_counters() -> void:
+	for key in _fault_counters:
+		_fault_counters[key] = 0
 
 
 func start(listen_port: int = port) -> int:
@@ -84,6 +150,7 @@ func _process(_delta: float) -> void:
 			"will_retain": false,
 			"keepalive": 0,
 			"last_packet_msec": Time.get_ticks_msec(),
+			"outbound_queue": [],
 		})
 
 	for client in _clients.duplicate():
@@ -119,6 +186,8 @@ func _poll_client(client: Dictionary) -> void:
 	if keepalive > 0 and Time.get_ticks_msec() - client.last_packet_msec > keepalive * 1500:
 		_report("Client %s timed out" % _client_name(client))
 		_remove_client(client, true)
+		return
+	_flush_outbound(client)
 
 
 func _take_packet(client: Dictionary) -> PackedByteArray:
@@ -310,7 +379,78 @@ func _send_publish(client: Dictionary, topic: String, payload: PackedByteArray, 
 	var packet := PackedByteArray([CP_PUBLISH | (0x01 if retain else 0)])
 	_append_remaining_length(packet, body.size())
 	packet.append_array(body)
-	_send(client, packet)
+	_send_application_publish(client, topic, packet)
+
+
+func _send_application_publish(client: Dictionary, topic: String, packet: PackedByteArray) -> void:
+	if not _fault_matches(topic):
+		_send(client, packet)
+		return
+	_fault_counters.matched += 1
+	var disconnect_after: int = _fault_profile.disconnect_after
+	if disconnect_after > 0 and _fault_counters.matched == disconnect_after:
+		_fault_counters.interrupted += 1
+		_report("Fault interrupted %s after matched delivery %d" % [_client_name(client), disconnect_after])
+		_remove_client(client, true)
+		return
+	if _fault_rng.randf() < float(_fault_profile.loss_rate):
+		_fault_counters.dropped += 1
+		_report("Fault dropped PUBLISH topic=%s sequence=%d" % [topic, _fault_sequence])
+		_fault_sequence += 1
+		return
+	_queue_fault_delivery(client, topic, packet)
+	if _fault_rng.randf() < float(_fault_profile.duplicate_rate):
+		_fault_counters.duplicated += 1
+		_queue_fault_delivery(client, topic, packet)
+
+
+func _fault_matches(topic: String) -> bool:
+	if not _fault_profile.enabled:
+		return false
+	var filters: PackedStringArray = _fault_profile.topic_filters
+	if filters.is_empty():
+		return true
+	for topic_filter in filters:
+		if _topic_matches(topic_filter, topic):
+			return true
+	return false
+
+
+func _queue_fault_delivery(client: Dictionary, topic: String, packet: PackedByteArray) -> void:
+	var jitter := 0
+	if _fault_profile.jitter_ms > 0:
+		jitter = _fault_rng.randi_range(-_fault_profile.jitter_ms, _fault_profile.jitter_ms)
+	var reorder_delay := 0
+	if _fault_profile.reorder_ms > 0:
+		reorder_delay = _fault_rng.randi_range(0, _fault_profile.reorder_ms)
+		if reorder_delay > 0:
+			_fault_counters.reordered += 1
+	var due_msec := Time.get_ticks_msec() + maxi(0, _fault_profile.latency_ms + jitter) + reorder_delay
+	client.outbound_queue.append({
+		"packet": packet,
+		"topic": topic,
+		"due_msec": due_msec,
+		"sequence": _fault_sequence,
+	})
+	_fault_sequence += 1
+	_fault_counters.queued += 1
+
+
+func _flush_outbound(client: Dictionary) -> void:
+	var now := Time.get_ticks_msec()
+	if now < _hold_until_msec:
+		return
+	var queue: Array = client.outbound_queue
+	queue.sort_custom(func(a: Dictionary, b: Dictionary):
+		if a.due_msec == b.due_msec:
+			return a.sequence < b.sequence
+		return a.due_msec < b.due_msec
+	)
+	while not queue.is_empty() and int(queue[0].due_msec) <= now:
+		var delivery: Dictionary = queue.pop_front()
+		if not _send(client, delivery.packet):
+			return
+		_fault_counters.delivered += 1
 
 
 func _remove_client(client: Dictionary, unexpected: bool, publish_will: bool = true) -> void:

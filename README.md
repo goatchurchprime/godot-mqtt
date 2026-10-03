@@ -168,6 +168,7 @@ The same deterministic suite can be run headlessly with:
 The simulated broker and LAN discovery have real-socket acceptance tests:
 
 * `godot --headless --path . --script res://tests/simulated_broker_acceptance.gd`
+* `godot --headless --path . --script res://tests/simulated_broker_faults.gd`
 * `godot --headless --path . --script res://tests/lan_broker_acceptance.gd`
 
 ## LAN broker convenience
@@ -181,6 +182,32 @@ LAN discovery and the simulated broker are for trusted native LAN development.
 They have no authentication, TLS, persistence or WebSocket listener. Web exports
 cannot host or discover them and should use an explicitly configured `ws://` or
 `wss://` broker. See `docs/SIMULATED_BROKER_SCOPE.md` for the supported subset.
+
+The simulated broker can also inject deterministic faults into selected
+broker-to-subscriber `PUBLISH` traffic. This is intended for local real-time
+network tests; MQTT connection, subscription, ping and acknowledgement control
+packets bypass the fault queue. For example:
+
+```gdscript
+$MQTTLANBroker.configure_faults({
+	"enabled": true,
+	"seed": 1234,
+	"topic_filters": ["voip/audio/#"],
+	"latency_ms": 40,
+	"jitter_ms": 15,
+	"loss_rate": 0.02,
+	"duplicate_rate": 0.01,
+	"reorder_ms": 20,
+})
+```
+
+Call `hold_deliveries(milliseconds)` on a hosting LAN broker to queue matching
+traffic and release it as a burst, and `get_fault_counters()` to record the
+run. See `docs/SIMULATED_BROKER_SCOPE.md` for the complete profile.
+
+For downstream vendoring and the symmetric TwoVoIP smoke-test startup pattern,
+see `docs/TWOVOIP_VENDORING.md`. These broker additions are the V1.5 feature
+set; the existing MQTT client API remains V1.4-compatible.
 
 ## Development disclosure
 

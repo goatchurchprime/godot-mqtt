@@ -28,6 +28,12 @@ The simulated broker is intended for trusted LAN development. It deliberately
 omits authentication, TLS, persistence, WebSockets and QoS 2. Web exports remain
 clients of an explicitly configured WebSocket broker.
 
+For deterministic local network testing, call `configure_faults(profile)` on
+either broker scene. Matching outbound `PUBLISH` messages can be delayed,
+jittered, dropped, duplicated, reordered, held for a burst, or used to interrupt
+a subscriber connection. MQTT control packets are not fuzzed. The hosting LAN
+broker also exposes `hold_deliveries(milliseconds)` and `get_fault_counters()`.
+
 The full source repository contains demonstrations, editor-friendly tests and
 public-broker diagnostics:
 

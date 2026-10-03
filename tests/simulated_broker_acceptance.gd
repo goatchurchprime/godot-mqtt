@@ -39,6 +39,35 @@ func _run() -> void:
 	await _wait_for(func(): return ["acceptance/first/message", "hello"] in observer_messages, 2.0, "wildcard message arrives")
 	await _wait_for(func(): return publish_id in acknowledgements, 2.0, "QoS 1 PUBACK arrives")
 
+	var ordered_observer := _new_client("ordered-observer")
+	var second_ordered_observer := _new_client("second-ordered-observer")
+	var ordered_messages: Array[String] = []
+	var second_ordered_messages: Array[String] = []
+	ordered_observer.received_message.connect(func(topic, message):
+		if topic == "acceptance/ordered":
+			ordered_messages.append(message)
+	)
+	second_ordered_observer.received_message.connect(func(topic, message):
+		if topic == "acceptance/ordered":
+			second_ordered_messages.append(message)
+	)
+	ordered_observer.connect_to_broker(broker_url)
+	second_ordered_observer.connect_to_broker(broker_url)
+	await _wait_for(func(): return _is_connected(ordered_observer) and _is_connected(second_ordered_observer), 2.0, "ordering observers connect")
+	ordered_observer.subscribe("acceptance/ordered")
+	second_ordered_observer.subscribe("acceptance/ordered")
+	await create_timer(0.05).timeout
+	var expected_order: Array[String] = []
+	for index in range(20):
+		var message := "packet-%02d" % index
+		expected_order.append(message)
+		publisher.publish("acceptance/ordered", message)
+	await _wait_for(func(): return ordered_messages.size() == expected_order.size() and second_ordered_messages.size() == expected_order.size(), 2.0, "unfuzzed message stream reaches both observers")
+	if ordered_messages != expected_order:
+		_fail("first observer's unfuzzed ordering changed: %s" % [ordered_messages])
+	if second_ordered_messages != expected_order:
+		_fail("second observer's unfuzzed ordering changed: %s" % [second_ordered_messages])
+
 	var late_client := _new_client("late-client")
 	var late_messages: Array[Array] = []
 	late_client.received_message.connect(func(topic, message): late_messages.append([topic, message]))
