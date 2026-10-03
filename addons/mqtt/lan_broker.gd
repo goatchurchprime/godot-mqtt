@@ -16,7 +16,7 @@ enum State { STOPPED, SEARCHING, ELECTING, HOSTING, USING_REMOTE, FAILED }
 @export var discovery_seconds := 1.0
 @export var election_seconds := 0.8
 @export var announce_seconds := 0.25
-@export var verbose := true
+@export var verbose := false
 
 var state := State.STOPPED
 var broker_url := ""

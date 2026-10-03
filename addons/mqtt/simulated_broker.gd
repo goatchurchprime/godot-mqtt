@@ -36,7 +36,7 @@ const DEFAULT_FAULT_PROFILE := {
 
 @export var port := 1883
 @export var bind_address := "*"
-@export var verbose := true
+@export var verbose := false
 
 var _server: TCPServer
 var _clients: Array[Dictionary] = []

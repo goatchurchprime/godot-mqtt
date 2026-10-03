@@ -9,7 +9,7 @@ extends Node
 # mosquitto_pub -h test.mosquitto.org -t "metest/retain" -m "retained message" -r
 
 @export var client_id = ""
-@export var verbose_level = 2  # 0 quiet, 1 connections and subscriptions, 2 all messages
+@export var verbose_level = 0  # 0 quiet, 1 connections and subscriptions, 2 all messages
 @export var binarymessages = false
 @export var pinginterval = 30
 

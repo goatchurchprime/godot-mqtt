@@ -37,6 +37,9 @@ broker also exposes `hold_deliveries(milliseconds)` and `get_fault_counters()`.
 The full source repository contains demonstrations, editor-friendly tests and
 public-broker diagnostics:
 
+Library logging is quiet by default. Set the MQTT client's `verbose_level` or a
+broker's `verbose` property explicitly when interactive diagnostics are wanted.
+
 https://github.com/goatchurchprime/godot-mqtt
 
 This addon is distributed under the MIT license in `LICENSE.md`.
