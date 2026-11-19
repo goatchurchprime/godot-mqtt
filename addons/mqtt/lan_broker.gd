@@ -25,7 +25,7 @@ var node_id := ""
 var _receiver: UDPServer
 var _broadcaster: PacketPeerUDP
 var _local_probe: StreamPeerTCP
-var _broker: MQTTSimulatedBroker
+var _broker
 var _can_receive_broadcasts := false
 var _candidates: Dictionary = {}
 var _phase_ends_msec := 0
@@ -225,7 +225,7 @@ func _start_broker(join_existing: bool = true) -> int:
 	add_child(_broker)
 	if not _fault_profile.is_empty():
 		_broker.configure_faults(_fault_profile)
-	var error := _broker.start(broker_port)
+	var error: int = _broker.start(broker_port)
 	if error != OK:
 		_broker.queue_free()
 		_broker = null

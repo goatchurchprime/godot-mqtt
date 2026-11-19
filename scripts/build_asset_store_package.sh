@@ -14,6 +14,7 @@ zip -q "${package_path}" \
 	addons/mqtt/mqtt.gd \
 	addons/mqtt/mqtt.gd.uid \
 	addons/mqtt/mqtt.tscn \
+	addons/mqtt/package.cfg \
 	addons/mqtt/simulated_broker.gd \
 	addons/mqtt/simulated_broker.gd.uid \
 	addons/mqtt/simulated_broker.tscn \
